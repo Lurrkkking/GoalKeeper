@@ -1,0 +1,39 @@
+{
+  "init_foot_sep_y": -0.18111228942871094,
+  "init_foot_dist": 0.18111228942871094,
+  "cases": [
+    {
+      "label": "A_zero_action",
+      "mode": "zero_action",
+      "n_frames": 30,
+      "cross_count": 30,
+      "cross_rate": 1.0,
+      "close_count": 0,
+      "close_rate": 0.0,
+      "first_cross_step": 0,
+      "min_foot_sep_y": -0.4853487014770508
+    },
+    {
+      "label": "B_zero_torque",
+      "mode": "zero_torque",
+      "n_frames": 2,
+      "cross_count": 2,
+      "cross_rate": 1.0,
+      "close_count": 0,
+      "close_rate": 0.0,
+      "first_cross_step": 0,
+      "min_foot_sep_y": -0.18265104293823242
+    },
+    {
+      "label": "C_random_policy",
+      "mode": "random",
+      "n_frames": 42,
+      "cross_count": 42,
+      "cross_rate": 1.0,
+      "close_count": 0,
+      "close_rate": 0.0,
+      "first_cross_step": 0,
+      "min_foot_sep_y": -0.38829946517944336
+    }
+  ]
+}

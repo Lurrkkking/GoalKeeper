@@ -128,8 +128,8 @@ class MotionLib:
             for k, name in enumerate(keyframe_names):
                 # import ipdb; ipdb.set_trace()
                 self.motion_keyframe_pos[start:end, k] = torch.tensor(traj["link_position"][:, k], dtype=torch.float, device=device)
-                self.motion_keyframe_rpy[start:end, k] = torch.tensor(euler_from_quaternion(traj["link_oritentation"][:, k]), dtype=torch.float, device=device)
-                self.motion_keyframe_lin_vel[start:end, k] = torch.tensor(traj["lin_velocity"][:, k], dtype=torch.float, device=device)
+                self.motion_keyframe_rpy[start:end, k] = torch.tensor(euler_from_quaternion(traj["link_orientation"][:, k]), dtype=torch.float, device=device)
+                self.motion_keyframe_lin_vel[start:end, k] = torch.tensor(traj["link_velocity"][:, k], dtype=torch.float, device=device)
                 self.motion_keyframe_ang_vel[start:end, k] = torch.tensor(traj["link_angular_velocity"][:, k], dtype=torch.float, device=device)
             
             self.motion_keyframe_pos[start:end, :, 0:2] -= self.motion_base_pos[start:start+1, None, 0:2]

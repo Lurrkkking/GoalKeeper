@@ -1,0 +1,10 @@
+{
+  "obs_dim": 750,
+  "num_one_step_obs": 75,
+  "actor_history": 10,
+  "ball_in_obs": true,
+  "ball_obs_range": [
+    6,
+    9
+  ]
+}

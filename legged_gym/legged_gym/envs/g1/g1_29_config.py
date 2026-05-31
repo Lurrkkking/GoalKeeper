@@ -296,9 +296,9 @@ class G129Cfg(LeggedRobotCfg):
         class scales:
             
             # task rewards
-            eereach = 10.0
-            success = 5.0
-            stopball = 100.0
+            eereach = 20.0
+            success = 10.0
+            stopball = 120.0
 
             # move rewards
             stayonline = -2.0

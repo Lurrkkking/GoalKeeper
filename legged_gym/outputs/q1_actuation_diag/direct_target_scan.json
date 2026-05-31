@@ -1,0 +1,178 @@
+[
+  {
+    "joint_idx": 0,
+    "dof_name": "left_hip_pitch_joint",
+    "actual_delta": -0.21963417530059814,
+    "tracking_ratio": 1.0981708765029907,
+    "torque": 31.405200958251953,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 1,
+    "dof_name": "left_hip_roll_joint",
+    "actual_delta": -0.14156416058540344,
+    "tracking_ratio": 0.7078208029270172,
+    "torque": 3.2425930500030518,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 2,
+    "dof_name": "left_hip_yaw_joint",
+    "actual_delta": -0.1857364922761917,
+    "tracking_ratio": 0.9286824613809586,
+    "torque": 36.0,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 3,
+    "dof_name": "left_knee_joint",
+    "actual_delta": 5.686509393854067e-05,
+    "tracking_ratio": 0.00028432546969270334,
+    "torque": 16.36302947998047,
+    "status": "STUCK"
+  },
+  {
+    "joint_idx": 4,
+    "dof_name": "left_ankle_pitch_joint",
+    "actual_delta": -0.061510492116212845,
+    "tracking_ratio": 0.3075524605810642,
+    "torque": 6.759727478027344,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 5,
+    "dof_name": "left_ankle_roll_joint",
+    "actual_delta": -0.14729784429073334,
+    "tracking_ratio": 0.7364892214536667,
+    "torque": 1.4166173934936523,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 6,
+    "dof_name": "right_hip_pitch_joint",
+    "actual_delta": -0.15573255717754364,
+    "tracking_ratio": 0.7786627858877182,
+    "torque": 22.010061264038086,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 7,
+    "dof_name": "right_hip_roll_joint",
+    "actual_delta": -0.41828134655952454,
+    "tracking_ratio": 2.0914067327976227,
+    "torque": 13.12867259979248,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 8,
+    "dof_name": "right_hip_yaw_joint",
+    "actual_delta": 0.0010872598504647613,
+    "tracking_ratio": 0.005436299252323806,
+    "torque": 36.0,
+    "status": "STUCK"
+  },
+  {
+    "joint_idx": 9,
+    "dof_name": "right_knee_joint",
+    "actual_delta": 9.442929876968265e-05,
+    "tracking_ratio": 0.00047214649384841323,
+    "torque": 16.3173885345459,
+    "status": "STUCK"
+  },
+  {
+    "joint_idx": 10,
+    "dof_name": "right_ankle_pitch_joint",
+    "actual_delta": -0.05931943655014038,
+    "tracking_ratio": 0.2965971827507019,
+    "torque": 3.716433525085449,
+    "status": "STUCK"
+  },
+  {
+    "joint_idx": 11,
+    "dof_name": "right_ankle_roll_joint",
+    "actual_delta": -0.06940658390522003,
+    "tracking_ratio": 0.34703291952610016,
+    "torque": 3.2764573097229004,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 12,
+    "dof_name": "waist_roll_joint",
+    "actual_delta": -0.26070094108581543,
+    "tracking_ratio": 1.3035047054290771,
+    "torque": 2.8944056034088135,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 13,
+    "dof_name": "waist_yaw_joint",
+    "actual_delta": -0.17108254134655,
+    "tracking_ratio": 0.8554127067327499,
+    "torque": 36.0,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 14,
+    "dof_name": "left_shoulder_pitch_joint",
+    "actual_delta": -0.16976885497570038,
+    "tracking_ratio": 0.8488442748785019,
+    "torque": 0.5931878685951233,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 15,
+    "dof_name": "left_shoulder_roll_joint",
+    "actual_delta": -0.08736946433782578,
+    "tracking_ratio": 0.4368473216891289,
+    "torque": 2.2487921714782715,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 16,
+    "dof_name": "left_shoulder_yaw_joint",
+    "actual_delta": -0.20003102719783783,
+    "tracking_ratio": 1.0001551359891891,
+    "torque": 0.0018932742532342672,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 17,
+    "dof_name": "left_elbow_joint",
+    "actual_delta": -0.1869952380657196,
+    "tracking_ratio": 0.934976190328598,
+    "torque": 0.29931291937828064,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 18,
+    "dof_name": "right_shoulder_pitch_joint",
+    "actual_delta": -0.1697140485048294,
+    "tracking_ratio": 0.848570242524147,
+    "torque": 0.5940351486206055,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 19,
+    "dof_name": "right_shoulder_roll_joint",
+    "actual_delta": -0.1901601105928421,
+    "tracking_ratio": 0.9508005529642105,
+    "torque": 0.19209030270576477,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 20,
+    "dof_name": "right_shoulder_yaw_joint",
+    "actual_delta": -0.19992074370384216,
+    "tracking_ratio": 0.9996037185192108,
+    "torque": 3.157998435199261e-05,
+    "status": "OK"
+  },
+  {
+    "joint_idx": 21,
+    "dof_name": "right_elbow_joint",
+    "actual_delta": -0.1864229142665863,
+    "tracking_ratio": 0.9321145713329315,
+    "torque": 0.3021335303783417,
+    "status": "OK"
+  }
+]

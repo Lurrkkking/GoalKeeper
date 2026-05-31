@@ -1,0 +1,32 @@
+{
+  "urdf": "/root/autodl-tmp/Humanoid-Goalkeeper/legged_gym/resources/robots/q1/q1_22dof_goalkeeper_collision.urdf",
+  "num_actions": 22,
+  "num_dof": 22,
+  "num_bodies": 23,
+  "control_type": "P",
+  "action_scale": 0.25,
+  "dof_names": [
+    "left_hip_pitch_joint",
+    "left_hip_roll_joint",
+    "left_hip_yaw_joint",
+    "left_knee_joint",
+    "left_ankle_pitch_joint",
+    "left_ankle_roll_joint",
+    "right_hip_pitch_joint",
+    "right_hip_roll_joint",
+    "right_hip_yaw_joint",
+    "right_knee_joint",
+    "right_ankle_pitch_joint",
+    "right_ankle_roll_joint",
+    "waist_roll_joint",
+    "waist_yaw_joint",
+    "left_shoulder_pitch_joint",
+    "left_shoulder_roll_joint",
+    "left_shoulder_yaw_joint",
+    "left_elbow_joint",
+    "right_shoulder_pitch_joint",
+    "right_shoulder_roll_joint",
+    "right_shoulder_yaw_joint",
+    "right_elbow_joint"
+  ]
+}

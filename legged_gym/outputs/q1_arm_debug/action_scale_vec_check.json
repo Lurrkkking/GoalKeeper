@@ -1,0 +1,42 @@
+[
+  {
+    "dof_name": "left_shoulder_pitch_joint",
+    "dof_idx": 14,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "left_shoulder_roll_joint",
+    "dof_idx": 15,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "left_shoulder_yaw_joint",
+    "dof_idx": 16,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "left_elbow_joint",
+    "dof_idx": 17,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "right_shoulder_pitch_joint",
+    "dof_idx": 18,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "right_shoulder_roll_joint",
+    "dof_idx": 19,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "right_shoulder_yaw_joint",
+    "dof_idx": 20,
+    "action_scale": 0.5
+  },
+  {
+    "dof_name": "right_elbow_joint",
+    "dof_idx": 21,
+    "action_scale": 0.5
+  }
+]

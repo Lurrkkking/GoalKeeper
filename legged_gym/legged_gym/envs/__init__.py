@@ -31,10 +31,11 @@
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .base.legged_robot import LeggedRobot
 from .g1.g1_29_config import G129Cfg, G129CfgPPO
-
+from .q1.q1_goalkeeper_config import Q1GoalkeeperCfg, Q1GoalkeeperCfgPPO
 
 import os
 
 from legged_gym.utils.task_registry import task_registry
 
 task_registry.register( "29", LeggedRobot, G129Cfg(), G129CfgPPO() )
+task_registry.register( "q1", LeggedRobot, Q1GoalkeeperCfg(), Q1GoalkeeperCfgPPO() )

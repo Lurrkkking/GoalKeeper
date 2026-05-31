@@ -1,0 +1,24 @@
+{
+  "mode": "zero_action",
+  "steps_recorded": 78,
+  "robot_stable": false,
+  "ball_contact_detected": true,
+  "ball_contact_body": "left_ankle_pitch_link",
+  "goal_conceded": false,
+  "ball_initial_speed": 2.3822152614593506,
+  "ball_final_speed": 0.19404342770576477,
+  "final_term_reason": "base_env",
+  "episode_length": 79,
+  "ball_pos_initial": {
+    "x": 2.2540345191955566,
+    "y": -0.06353005021810532,
+    "z": 0.512268602848053
+  },
+  "ball_pos_final": {
+    "x": 0.17631782591342926,
+    "y": -0.007652501575648785,
+    "z": 0.09999996423721313
+  },
+  "first_contact_step": 60,
+  "ball_speed_at_contact": 1.6375700235366821
+}

@@ -205,9 +205,9 @@ class LeggedRobot(BaseTask):
         self.end_target[approachidx, :] = self.ball_states[approachidx, :3].clone()
         self.end_target[:, 0] = torch.clip(self.end_target[:, 0], min = self.env_origins[:, 0] + 0.1, max = self.env_origins[:, 0] + 1.0)
 
-        hand_pos = self.rigid_body_states[:, self.hand_indices, :3].clone() 
+        hand_pos = self.rigid_body_states[:, self.hand_indices, :3].clone()
         hand_pos_l, hand_pos_r =  hand_pos[:,0,:], hand_pos[:,1,:]
-        
+
         region0_dis = torch.norm(self.end_target[self.end_regions == 0] - hand_pos_l[self.end_regions == 0], dim = 1)
         region1_dis = torch.norm(self.end_target[self.end_regions == 1] - hand_pos_r[self.end_regions == 1], dim = 1)
         region2_dis = torch.norm(self.end_target[self.end_regions == 2] - hand_pos_l[self.end_regions == 2], dim = 1)
@@ -252,9 +252,12 @@ class LeggedRobot(BaseTask):
         """
 
 
-        self.reset_buf = torch.min(self.rigid_body_states[:, self.knee_indices, 2], dim = -1).values < 0.10
+        knee_threshold = float(getattr(self.cfg, 'termination', type('T',(),{'knee_height_threshold':0.10})).knee_height_threshold)
+        self.reset_buf = torch.min(self.rigid_body_states[:, self.knee_indices, 2], dim=-1).values < knee_threshold
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
-        self.gravity_termination_buf = torch.any(torch.norm(self.projected_gravity[:, 0:2], dim=-1, keepdim=True) > 0.8, dim=1)
+        gravity_term_cfg = getattr(self.cfg, 'termination', None)
+        grav_threshold = float(getattr(gravity_term_cfg, 'gravity_threshold', 0.8)) if gravity_term_cfg is not None else 0.8
+        self.gravity_termination_buf = torch.any(torch.norm(self.projected_gravity[:, 0:2], dim=-1, keepdim=True) > grav_threshold, dim=1)
         sharpforce_buf = torch.mean(torch.norm(self.contact_forces[:, self.contact_feet_indices, :], dim=-1), dim = -1) > 1.5 * self.cfg.rewards.max_contact_force
 
         self.reset_buf |= self.time_out_buf
@@ -316,6 +319,20 @@ class LeggedRobot(BaseTask):
             self.extras["episode"]['rew_' + key] = torch.mean(self.episode_sums[key][env_ids] / torch.clip(self.episode_length_buf[env_ids], min=1) / self.dt)
             self.episode_sums[key][env_ids] = 0.
 
+        # Q1 feet separation episode metrics
+        if self.feet_sep_enabled and len(env_ids) > 0:
+            n = max(1, len(env_ids))
+            valid_steps = self.ep_steps_foot[env_ids].clamp(min=1)
+            self.extras["episode"]["feet_cross_episode_rate"] = self.ep_feet_cross[env_ids].mean().item()
+            self.extras["episode"]["feet_too_close_step_rate"] = (self.ep_feet_too_close[env_ids] / valid_steps).mean().item()
+            self.extras["episode"]["min_foot_separation"] = self.ep_min_foot_sep[env_ids].mean().item()
+            self.extras["episode"]["mean_foot_separation"] = (self.ep_foot_sep_sum[env_ids] / valid_steps).mean().item()
+            # Reset episode buffers
+            self.ep_feet_too_close[env_ids] = 0.
+            self.ep_feet_cross[env_ids] = 0.
+            self.ep_min_foot_sep[env_ids] = 999.0
+            self.ep_foot_sep_sum[env_ids] = 0.
+            self.ep_steps_foot[env_ids] = 0.
 
         # send timeout info to the algorithm
         if self.cfg.env.send_timeouts:
@@ -619,10 +636,13 @@ class LeggedRobot(BaseTask):
     def _post_physics_step_callback(self):
         """ Callback called before computing terminations, rewards, and observations
             Default behaviour: Compute ang vel command based on target and heading, compute measured terrain heights and randomly push robots
-        """        
+        """
         self._randomize_balls()
         if self.cfg.domain_rand.push_robots and  (self.common_step_counter % self.cfg.domain_rand.push_interval == 0):
             self._push_robots()
+        # Q1 feet separation tracking (config-driven)
+        if getattr(self.cfg.rewards, 'feet_sep_enabled', False):
+            self._update_feet_separation()
 
     def _compute_torques(self, actions):
         """ Compute torques from actions.
@@ -637,7 +657,7 @@ class LeggedRobot(BaseTask):
         """
         #pd controller
 
-        actions_scaled = actions * self.cfg.control.action_scale
+        actions_scaled = actions * self.action_scale_vec
         self.joint_pos_target = self.default_dof_poses + actions_scaled
                 
         self.joint_pos_target[self.catchstep > self.startstep] = self.init_dof_pos[self.catchstep > self.startstep]
@@ -703,8 +723,11 @@ class LeggedRobot(BaseTask):
         self.root_states[env_ids, :3] += self.env_origins[env_ids]
         # self.root_states[env_ids, 1:2] += torch_rand_float(-0.3, 0.3, (len(env_ids), 1), device=self.device) # xy position within 1m of the center
         # self.root_states[env_ids, 2:3] += torch_rand_float(-0.1, 0.1, (len(env_ids), 1), device=self.device) # z position within 0.1m of the ground
-        # base velocities
-        self.root_states[env_ids, 7:13] = torch_rand_float(-0.3, 0.3, (len(env_ids), 6), device=self.device) # [7:10]: lin vel, [10:13]: ang vel
+        # base velocities (config-driven: Q1 goalkeeper zeros them)
+        if getattr(self.cfg.domain_rand, 'randomize_reset_velocity', True):
+            self.root_states[env_ids, 7:13] = torch_rand_float(-0.3, 0.3, (len(env_ids), 6), device=self.device)
+        else:
+            self.root_states[env_ids, 7:13] = 0.0
         env_ids_int32 = env_ids.to(dtype=torch.int32)
 
         ball_ids = env_ids
@@ -914,25 +937,29 @@ class LeggedRobot(BaseTask):
         self.end_target = torch.zeros(self.num_envs, 3, dtype = torch.float, device= self.device)
 
         six = self.num_envs // 6
-        self.end_regions = torch.cat([
-            torch.zeros(six, dtype=torch.long, device = self.device),
-            torch.ones(six, dtype=torch.long, device = self.device),
-            torch.full((six,), 2, dtype=torch.long, device = self.device),
-            torch.full((six,), 3, dtype=torch.long, device = self.device),
-            torch.full((six,), 4, dtype=torch.long, device = self.device),
-            torch.full((six,), 5, dtype=torch.long, device = self.device)
-        ])
+        remainder = self.num_envs % 6
+        regions = [
+            torch.zeros(six, dtype=torch.long, device=self.device),
+            torch.ones(six, dtype=torch.long, device=self.device),
+            torch.full((six,), 2, dtype=torch.long, device=self.device),
+            torch.full((six,), 3, dtype=torch.long, device=self.device),
+            torch.full((six,), 4, dtype=torch.long, device=self.device),
+            torch.full((six,), 5, dtype=torch.long, device=self.device),
+        ]
+        if remainder > 0:
+            regions.append(torch.arange(remainder, dtype=torch.long, device=self.device))
+        self.end_regions = torch.cat(regions)
     
         command_dict = class_to_dict(self.cfg.commands)
 
         # Initialize an empty tensor for command ranges
-        num_envs = len(self.end_regions)
+        num_envs = self.num_envs
         self.command_ranges = torch.zeros((num_envs, 4), dtype=torch.float32, device=self.device)
         self.command_bound  = torch.zeros((num_envs, 4), dtype=torch.float32, device=self.device)
         self.init_ranges  = torch.zeros((4), dtype=torch.float32, device=self.device)
         # For each environment, set the appropriate ranges based on end_region
         for env_idx in range(num_envs):
-            region = self.end_regions[env_idx].item()  # Get the region (0, 1, 2, or 3)
+            region = self.end_regions[env_idx].item() if env_idx < len(self.end_regions) else 0
             region_key = f"ranges_{region}"
             
             # Get the ranges for this region
@@ -1004,6 +1031,42 @@ class LeggedRobot(BaseTask):
         self.standpos = torch.tensor([self.cfg.init_state.init_pos], dtype=torch.float32, device=self.default_dof_pos.device)
         self.default_dof_poses = self.default_dof_pos.repeat(self.num_envs,1)
         self.init_dof_pos = self.default_dof_poses.clone()
+
+        # Per-joint action_scale (config-driven, default = uniform)
+        self.action_scale_vec = torch.ones(self.num_dof, dtype=torch.float, device=self.device) * self.cfg.control.action_scale
+        per_joint_scales = getattr(self.cfg.control, 'per_joint_action_scale', None)
+        if per_joint_scales is not None:
+            for joint_name, scale in per_joint_scales.items():
+                if joint_name in self.dof_names:
+                    idx = self.dof_names.index(joint_name)
+                    self.action_scale_vec[idx] = scale
+                    print(f"[per_joint_action_scale] {joint_name}: {self.cfg.control.action_scale:.4f} -> {scale:.4f}")
+
+        # Q1 goalkeeper smoke: capture actual simulator dof_pos as PD target
+        # (avoids target/actual mismatch that causes feet-lift on reset)
+        if getattr(self.cfg.init_state, 'capture_default_dof_pos_from_sim', False):
+            captured = self.dof_pos[0].detach().clone()
+            # Apply per-joint overrides from config (e.g. force symmetry)
+            override = getattr(self.cfg.init_state, 'default_dof_pos_override', {})
+            for name, val in override.items():
+                if name in self.dof_names:
+                    idx = self.dof_names.index(name)
+                    captured[idx] = val
+            self.standpos = captured.unsqueeze(0)
+            self.default_dof_pos = captured.unsqueeze(0)
+            self.default_dof_poses = captured.unsqueeze(0).repeat(self.num_envs, 1)
+            self.init_dof_pos = self.default_dof_poses.clone()
+            # Apply torque limit scaling AFTER capture (config-driven)
+            tq_scale = getattr(self.cfg.init_state, 'torque_limits_scale', {})
+            for name, scale in tq_scale.items():
+                if name in self.dof_names:
+                    self.torque_limits[self.dof_names.index(name)] *= scale
+            print(f"[capture_default_dof_pos] knee: L={captured[3]:.4f} R={captured[9]:.4f} "
+                  f"hip: L={captured[0]:.4f} R={captured[6]:.4f} "
+                  f"ankle: L={captured[4]:.4f} R={captured[10]:.4f} "
+                  f"overrides={list(override.keys()) if override else 'none'} "
+                  f"tq_scale={list(tq_scale.keys()) if tq_scale else 'none'} "
+                  f"root_z={self.cfg.init_state.pos[2]:.4f}")
 
 
 
@@ -1097,6 +1160,21 @@ class LeggedRobot(BaseTask):
         # reward episode sums
         self.episode_sums = {name: torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
                              for name in self.reward_scales.keys()}
+
+        # Q1 feet separation tracking (config-driven, disabled by default)
+        self.feet_sep_enabled = getattr(self.cfg.rewards, 'feet_sep_enabled', False)
+        if self.feet_sep_enabled:
+            self.min_foot_sep = float(getattr(self.cfg.rewards, 'min_foot_sep', 0.12))
+            self.feet_cross_threshold = float(getattr(self.cfg.rewards, 'feet_cross_threshold', 0.06))
+            self.feet_too_close_threshold = float(getattr(self.cfg.rewards, 'feet_too_close_threshold', 0.10))
+            # Episode tracking buffers
+            self.ep_feet_too_close = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+            self.ep_feet_cross = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+            self.ep_min_foot_sep = torch.ones(self.num_envs, dtype=torch.float, device=self.device) * 999.0
+            self.ep_foot_sep_sum = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+            self.ep_steps_foot = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+            # Per-step foot sep (for reward)
+            self.foot_sep_y = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
 
     def _create_ground_plane(self):
         """ Adds a ground plane to the simulation, sets friction and restitution based on the cfg.
@@ -1446,7 +1524,7 @@ class LeggedRobot(BaseTask):
 
         foot_contact_forces_z = self.contact_forces[:, self.contact_feet_indices, 2]
         
-        jump = self.root_states[:,2] > 1.0
+        jump = self.root_states[:,2] > 0.55
         
         self.has_in_air = torch.logical_or(self.has_in_air, jump)
         
@@ -1559,3 +1637,30 @@ class LeggedRobot(BaseTask):
     
     def _reward_deviation_waist_pitch_joint(self):
         return torch.sum(torch.square(self.dof_pos - self.default_dof_pos)[:, self.waist_joint_indices[2]], dim=-1)
+
+    # --- Q1 Goalkeeper feet separation (config-driven) ---
+
+    def _update_feet_separation(self):
+        """Compute base-frame foot separation for Q1 goalkeeper."""
+        base_pos = self.root_states[:, 0:3]
+        base_quat = self.root_states[:, 3:7]
+        lf_pos = self.rigid_body_states[:, self.contact_feet_indices[0], 0:3]
+        rf_pos = self.rigid_body_states[:, self.contact_feet_indices[1], 0:3]
+
+        lf_base = quat_rotate_inverse(base_quat, lf_pos - base_pos)
+        rf_base = quat_rotate_inverse(base_quat, rf_pos - base_pos)
+        self.foot_sep_y = torch.abs(lf_base[:, 1] - rf_base[:, 1])
+
+        # Episode tracking
+        too_close = (self.foot_sep_y < self.feet_too_close_threshold).float()
+        crossed = (self.foot_sep_y < self.feet_cross_threshold).float()
+        self.ep_feet_too_close += too_close
+        self.ep_feet_cross = torch.maximum(self.ep_feet_cross, crossed)
+        self.ep_min_foot_sep = torch.minimum(self.ep_min_foot_sep, self.foot_sep_y)
+        self.ep_foot_sep_sum += self.foot_sep_y
+        self.ep_steps_foot += 1.0
+
+    def _reward_penalty_feet_separation(self):
+        """Penalize feet being too close together (Q1 goalkeeper)."""
+        viol = torch.clamp(self.min_foot_sep - self.foot_sep_y, min=0.0)
+        return viol * viol
