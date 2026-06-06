@@ -1,0 +1,139 @@
+# Q1 Goalkeeper MuJoCo sim2sim config
+# Only contains fields needed for MuJoCo sim2sim verification.
+# All values derived from Q1 goalkeeper training config
+# (legged_gym/envs/q1/q1_goalkeeper_config.py).
+
+# --- MuJoCo model ---
+# IsaacGym-aligned physical baseline:
+# ball mass=0.1 kg, radius=0.1 m, friction≈0.5
+# body friction=1.0, condim=3
+xml_path: "q1_abi_B6_g1_joint.xml"  # B6: armature=0.004, damping=0.52, frictionloss=0.65 + G1-style collision
+policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper.onnx"
+
+# --- Simulation ---
+simulation_dt: 0.002       # 500 Hz MuJoCo physics (more stable than 200Hz for body-ground contact)
+control_decimation: 10      # policy runs at 50 Hz → policy_dt = 0.002 * 10 = 0.02s (matches IsaacGym training)
+simulation_duration: 5.0    # seconds
+
+# --- Observation dimensions ---
+num_actions: 22
+num_dofs: 22
+num_ballobs: 3
+num_single_obs: 75          # 3+3+3+22+22+22
+frame_stack: 10
+num_obs: 750                # 10 * 75
+
+# --- Clipping ---
+clip_actions: 100.0
+clip_observations: 100.0
+
+# --- Joint names (order MUST match policy action order) ---
+joint_names: [
+  "left_hip_pitch_joint",
+  "left_hip_roll_joint",
+  "left_hip_yaw_joint",
+  "left_knee_joint",
+  "left_ankle_pitch_joint",
+  "left_ankle_roll_joint",
+  "right_hip_pitch_joint",
+  "right_hip_roll_joint",
+  "right_hip_yaw_joint",
+  "right_knee_joint",
+  "right_ankle_pitch_joint",
+  "right_ankle_roll_joint",
+  "waist_roll_joint",
+  "waist_yaw_joint",
+  "left_shoulder_pitch_joint",
+  "left_shoulder_roll_joint",
+  "left_shoulder_yaw_joint",
+  "left_elbow_joint",
+  "right_shoulder_pitch_joint",
+  "right_shoulder_roll_joint",
+  "right_shoulder_yaw_joint",
+  "right_elbow_joint",
+]
+
+# --- Default DOF positions (from Q1 goalkeeper config init_pos / default_joint_angles) ---
+default_dof_pos: [
+  -0.087, 0.0, 0.0, 0.175, -0.087, 0.0,   # left leg
+  -0.087, 0.0, 0.0, 0.175, -0.087, 0.0,   # right leg
+  0.0, 0.0,                                 # waist (roll, yaw)
+  0.0, 0.0, 0.0, 0.0,                       # left arm
+  0.0, 0.0, 0.0, 0.0,                       # right arm
+]
+
+# --- Initial root pose (Q1: z=0.415) ---
+init_root_pos: [0.0, 0.0, 0.415]    # Match training: Q1GoalkeeperCfg.init_state.pos = [0,0,0.415]
+init_root_quat: [1.0, 0.0, 0.0, 0.0]  # wxyz
+
+# --- PD gains (from Q1 config stiffness/damping, mapped per joint) ---
+# Joint types: hip_* = (30, 1.5), knee = (30, 1.5), ankle_* = (20, 1.0),
+#              waist_* = (80, 2.0), shoulder_* = (20, 1.0), elbow = (20, 1.0)
+kps: [
+  30.0, 30.0, 30.0, 30.0, 20.0, 20.0,   # left leg
+  30.0, 30.0, 30.0, 30.0, 20.0, 20.0,   # right leg
+  80.0, 80.0,                             # waist
+  20.0, 20.0, 20.0, 20.0,                # left arm
+  20.0, 20.0, 20.0, 20.0,                # right arm
+]
+
+kds: [
+  1.5, 1.5, 1.5, 1.5, 1.0, 1.0,   # left leg
+  1.5, 1.5, 1.5, 1.5, 1.0, 1.0,   # right leg
+  2.0, 2.0,                         # waist
+  1.0, 1.0, 1.0, 1.0,              # left arm
+  1.0, 1.0, 1.0, 1.0,              # right arm
+]
+
+# --- Torque limits (from MuJoCo XML actuatorfrcrange) ---
+# hips/knees/waist: 36 Nm, ankles/shoulders/elbows: 22 Nm
+tau_limit: [
+  36.0, 36.0, 36.0, 36.0, 22.0, 22.0,   # left leg
+  36.0, 36.0, 36.0, 36.0, 22.0, 22.0,   # right leg
+  36.0, 36.0,                             # waist
+  22.0, 22.0, 22.0, 22.0,                # left arm
+  22.0, 22.0, 22.0, 22.0,                # right arm
+]
+
+# --- Per-joint action scale (from Q1 config per_joint_action_scale + default 0.25) ---
+action_scale_vec: [
+  0.25, 0.12, 0.10, 0.25, 0.25, 0.10,   # left leg
+  0.25, 0.12, 0.10, 0.25, 0.25, 0.10,   # right leg
+  0.25, 0.25,                             # waist
+  0.50, 0.50, 0.50, 0.50,                # left arm
+  0.50, 0.50, 0.50, 0.50,                # right arm
+]
+
+# --- Observation scales (from Q1 config normalization.obs_scales) ---
+obs_scale_ang_vel: 0.25
+obs_scale_dof_pos: 1.0
+obs_scale_dof_vel: 0.05
+# NOTE: ball_pos scale (0.3) is NOT applied to actor obs ball position.
+# The ball position in actor obs is raw base-frame relative.
+
+# --- Ball ---
+ball_radius: 0.1
+ball_mass: 0.1
+
+# Ball spawn matching training assign_ball_states:
+#   ball_start: x∈[3,5], y∈width_range, z∈height_range
+#   ball_end:   x∈[-0.6,-0.1], y∈command_range, z∈command_range
+#   t_flight ∈ [0.4, 1.0]
+# This config uses a single representative shot (flat, center).
+shot_init_pos: [4.0, 0.0, 0.5]     # ~middle of training range [3,5]
+# Velocity: v_xy = delta_xy / t_flight; v_z = (delta_z + 0.5*g*t^2) / t_flight
+# For flat shot (end z = start z), t=0.7, delta_x=-4.3 (end at -0.3)
+#   vx = -4.3/0.7 = -6.14, vz = (0+0.5*9.81*0.49)/0.7 = 3.43
+shot_init_vel: [-6.14, 0.0, 3.43]
+
+# --- IMU body name (must match MuJoCo XML body name) ---
+imu_body_name: "torso_link"
+torso_body_name: "torso_link"
+
+# --- Safety ---
+max_abs_qacc: 200000.0
+solver_iterations: 100
+ls_iterations: 50
+
+# --- Video ---
+video_fps: 50

@@ -1,0 +1,2162 @@
+{
+  "training_resume_command_observation": {
+    "train_q1_rand_weak_sh": "/root/autodl-tmp/Humanoid-Goalkeeper/legged_gym/legged_gym/scripts/train_q1_rand_weak.sh",
+    "resume_required_flags": [
+      "--resume",
+      "--resumeid",
+      "--checkpoint"
+    ]
+  },
+  "zero_action_matrix": [
+    {
+      "case": "A0_original_no_dr",
+      "stable_5s": false,
+      "survival_steps": 43,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": false,
+        "payload": false,
+        "motor_strength": false,
+        "kp": false,
+        "kd": false,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.4129999876022339
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          9.771047592163086,
+          -32.52096176147461,
+          -64.95757293701172
+        ],
+        "projected_gravity": [
+          -0.04532318189740181,
+          -0.18366675078868866,
+          -0.9819428324699402
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11981315165758133,
+          -0.15334834158420563
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "payload": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "motor_strength": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kp_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kd_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 1.7030621767044067
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.4462786614894867,
+          "root_z_min": 0.4462675154209137,
+          "roll_abs_max": 0.0058190226554870605,
+          "pitch_abs_max": 0.015560661442577839,
+          "base_lin_vel_xy_mean": 0.7562873959541321,
+          "base_ang_vel_mean": 4.61318302154541,
+          "dof_vel_max": 25.996713638305664,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.016609253361821175
+        }
+      ]
+    },
+    {
+      "case": "A1_current_dr_forced_off",
+      "stable_5s": false,
+      "survival_steps": 76,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": false,
+        "payload": false,
+        "motor_strength": false,
+        "kp": false,
+        "kd": false,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          4.145345687866211,
+          -24.255876541137695,
+          -8.571413040161133
+        ],
+        "projected_gravity": [
+          -0.05347096920013428,
+          -0.1565970778465271,
+          -0.9862139821052551
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11793400347232819,
+          -0.1466030776500702
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "payload": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "motor_strength": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kp_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kd_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 1.7030621767044067
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.43423137068748474,
+          "root_z_min": 0.4342276155948639,
+          "roll_abs_max": 0.05780278146266937,
+          "pitch_abs_max": 0.0009810862829908729,
+          "base_lin_vel_xy_mean": 0.4216466248035431,
+          "base_ang_vel_mean": 2.505854606628418,
+          "dof_vel_max": 0.7181042432785034,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05777888000011444
+        }
+      ]
+    },
+    {
+      "case": "A2_friction_only",
+      "stable_5s": false,
+      "survival_steps": 76,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": true,
+        "payload": false,
+        "motor_strength": false,
+        "kp": false,
+        "kd": false,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          9.343935012817383,
+          -24.119901657104492,
+          -6.581354141235352
+        ],
+        "projected_gravity": [
+          -0.052613165229558945,
+          -0.16016973555088043,
+          -0.9856863021850586
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11775209754705429,
+          -0.14698028564453125
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 0.6116182804107666,
+        "max": 1.387892484664917,
+        "mean": 0.9843074083328247
+      },
+      "payload": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "motor_strength": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kp_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kd_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 0.6627724766731262,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 1.7030621767044067
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.43423137068748474,
+          "root_z_min": 0.4342276155948639,
+          "roll_abs_max": 0.05780278146266937,
+          "pitch_abs_max": 0.0009810862829908729,
+          "base_lin_vel_xy_mean": 0.4216466248035431,
+          "base_ang_vel_mean": 2.505854606628418,
+          "dof_vel_max": 0.7181042432785034,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05777888000011444
+        }
+      ]
+    },
+    {
+      "case": "A3_payload_only",
+      "stable_5s": false,
+      "survival_steps": 66,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": false,
+        "payload": true,
+        "motor_strength": false,
+        "kp": false,
+        "kd": false,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          10.556619644165039,
+          -24.122434616088867,
+          -7.442260265350342
+        ],
+        "projected_gravity": [
+          -0.05103342980146408,
+          -0.16065238416194916,
+          -0.9856905341148376
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11760760843753815,
+          -0.14699824154376984
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "payload": {
+        "min": -0.47868436574935913,
+        "max": 0.6225036382675171,
+        "mean": 0.05605526268482208
+      },
+      "motor_strength": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kp_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kd_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 2.3829145431518555
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.4341807961463928,
+          "root_z_min": 0.4340691566467285,
+          "roll_abs_max": 0.05847674980759621,
+          "pitch_abs_max": 0.0010903222719207406,
+          "base_lin_vel_xy_mean": 0.4093015193939209,
+          "base_ang_vel_mean": 2.4805335998535156,
+          "dof_vel_max": 0.7354591488838196,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05845356360077858
+        }
+      ]
+    },
+    {
+      "case": "A4_motor_strength_only",
+      "stable_5s": false,
+      "survival_steps": 70,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": false,
+        "payload": false,
+        "motor_strength": true,
+        "kp": false,
+        "kd": false,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          4.142489910125732,
+          -24.25712776184082,
+          -8.579987525939941
+        ],
+        "projected_gravity": [
+          -0.05347270518541336,
+          -0.15659432113170624,
+          -0.9862142205238342
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11793392896652222,
+          -0.1466025710105896
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "payload": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "motor_strength": {
+        "min": 0.8506284952163696,
+        "max": 1.1492888927459717,
+        "mean": 0.9974421262741089
+      },
+      "kp_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kd_scale": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 1.7030621767044067
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.43423181772232056,
+          "root_z_min": 0.4342278838157654,
+          "roll_abs_max": 0.05870760977268219,
+          "pitch_abs_max": 0.0010994115145877004,
+          "base_lin_vel_xy_mean": 0.4214703440666199,
+          "base_ang_vel_mean": 2.508580207824707,
+          "dof_vel_max": 1.5454506874084473,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05868088826537132
+        }
+      ]
+    },
+    {
+      "case": "A5_kp_kd_only",
+      "stable_5s": false,
+      "survival_steps": 64,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": false,
+        "payload": false,
+        "motor_strength": false,
+        "kp": true,
+        "kd": true,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          4.142448425292969,
+          -24.257080078125,
+          -8.579968452453613
+        ],
+        "projected_gravity": [
+          -0.05347270146012306,
+          -0.15659423172473907,
+          -0.9862142205238342
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11793392896652222,
+          -0.14660267531871796
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "payload": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      "motor_strength": {
+        "min": 1.0,
+        "max": 1.0,
+        "mean": 1.0
+      },
+      "kp_scale": {
+        "min": 0.8501577377319336,
+        "max": 1.1487571001052856,
+        "mean": 0.9971553087234497
+      },
+      "kd_scale": {
+        "min": 0.8504072427749634,
+        "max": 1.1497818231582642,
+        "mean": 0.9985659718513489
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 1.0,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 1.7030621767044067
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.43423014879226685,
+          "root_z_min": 0.434224933385849,
+          "roll_abs_max": 0.05881417542695999,
+          "pitch_abs_max": 0.0010792072862386703,
+          "base_lin_vel_xy_mean": 0.42044752836227417,
+          "base_ang_vel_mean": 2.4939584732055664,
+          "dof_vel_max": 1.6476144790649414,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05878918990492821
+        }
+      ]
+    },
+    {
+      "case": "A6_all_weak_dr_push_off",
+      "stable_5s": false,
+      "survival_steps": 59,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": true,
+        "payload": true,
+        "motor_strength": true,
+        "kp": true,
+        "kd": true,
+        "push": false
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          7.714812278747559,
+          -24.36166763305664,
+          -8.453999519348145
+        ],
+        "projected_gravity": [
+          -0.05109810456633568,
+          -0.15863072872161865,
+          -0.9860150218009949
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11767856776714325,
+          -0.14677086472511292
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 0.6482361555099487,
+        "max": 1.306020975112915,
+        "mean": 0.973992645740509
+      },
+      "payload": {
+        "min": -0.4928046762943268,
+        "max": 0.7629047632217407,
+        "mean": 0.1450042724609375
+      },
+      "motor_strength": {
+        "min": 0.851425051689148,
+        "max": 1.149124026298523,
+        "mean": 1.009063959121704
+      },
+      "kp_scale": {
+        "min": 0.8501023054122925,
+        "max": 1.1492501497268677,
+        "mean": 0.9994001388549805
+      },
+      "kd_scale": {
+        "min": 0.8501296639442444,
+        "max": 1.1497639417648315,
+        "mean": 0.988886833190918
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 0.883476197719574,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 2.556926727294922
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.4342074394226074,
+          "root_z_min": 0.43403199315071106,
+          "roll_abs_max": 0.05943268910050392,
+          "pitch_abs_max": 0.0012254228349775076,
+          "base_lin_vel_xy_mean": 0.4133130609989166,
+          "base_ang_vel_mean": 2.491497278213501,
+          "dof_vel_max": 3.491786479949951,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05940636992454529
+        }
+      ]
+    },
+    {
+      "case": "A7_all_weak_dr_push_on",
+      "stable_5s": false,
+      "survival_steps": 63,
+      "dt": 0.019999999552965164,
+      "push_interval_steps": 201,
+      "push_would_happen_at_reset": false,
+      "dr": {
+        "friction": true,
+        "payload": true,
+        "motor_strength": true,
+        "kp": true,
+        "kd": true,
+        "push": true
+      },
+      "initial": {
+        "root_pos": [
+          -10.0,
+          -10.0,
+          0.41499999165534973
+        ],
+        "root_quat": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "root_euler_rpy": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_lin_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "root_ang_vel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "base_ang_vel_local": [
+          13.676401138305664,
+          -24.091501235961914,
+          -6.060220241546631
+        ],
+        "projected_gravity": [
+          -0.050370145589113235,
+          -0.16282539069652557,
+          -0.985368549823761
+        ],
+        "dof_pos_minus_default_max_abs": 0.0,
+        "dof_vel_max_abs": 0.0,
+        "foot_world_z": [
+          -0.11746793240308762,
+          -0.1472080647945404
+        ],
+        "foot_contact_force_norm": [
+          0.0,
+          0.0
+        ]
+      },
+      "first_zero_action_pd": {
+        "target_equals_default_max_abs": 0.0,
+        "pos_error_max_abs": 0.0,
+        "torque_max_abs": 0.0,
+        "torque_saturation_ratio": 0.0
+      },
+      "friction_coeffs": {
+        "min": 0.6921775937080383,
+        "max": 1.2826824188232422,
+        "mean": 1.0338009595870972
+      },
+      "payload": {
+        "min": 0.08363348245620728,
+        "max": 0.9716751575469971,
+        "mean": 0.5777026414871216
+      },
+      "motor_strength": {
+        "min": 0.8520351648330688,
+        "max": 1.1494792699813843,
+        "mean": 1.0015836954116821
+      },
+      "kp_scale": {
+        "min": 0.8515106439590454,
+        "max": 1.1491830348968506,
+        "mean": 1.0024082660675049
+      },
+      "kd_scale": {
+        "min": 0.8503974676132202,
+        "max": 1.1491730213165283,
+        "mean": 1.0003092288970947
+      },
+      "friction": {
+        "ground_cfg": {
+          "static_friction": 1.0,
+          "dynamic_friction": 1.0,
+          "restitution": 0.0
+        },
+        "robot_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 1,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 2,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 3,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 4,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 5,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 6,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 7,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 8,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 9,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 10,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 11,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 12,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 13,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 14,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 15,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 16,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 17,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 18,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 19,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 20,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 21,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 22,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          },
+          {
+            "shape": 23,
+            "friction": 0.9887411594390869,
+            "restitution": 0.0
+          }
+        ],
+        "ball_shapes_env0": [
+          {
+            "shape": 0,
+            "friction": 1.0,
+            "restitution": 0.0
+          }
+        ]
+      },
+      "base_mass_env0": {
+        "index": 0,
+        "name": "pelvis",
+        "original_mass": 1.7030621767044067,
+        "actual_mass": 2.468033790588379
+      },
+      "samples": [
+        {
+          "step": 0,
+          "root_z_mean": 0.4341926574707031,
+          "root_z_min": 0.43401288986206055,
+          "roll_abs_max": 0.059437818825244904,
+          "pitch_abs_max": 0.0012612200807780027,
+          "base_lin_vel_xy_mean": 0.4086163640022278,
+          "base_ang_vel_mean": 2.4572560787200928,
+          "dof_vel_max": 3.106478452682495,
+          "foot_contact_count_mean": 0.0,
+          "foot_slip_xy_mean_when_contact": 0.0,
+          "projected_gravity_xy_max": 0.05941334366798401
+        }
+      ]
+    }
+  ],
+  "obs_dump": {
+    "num_one_step_obs": 75,
+    "layout": "ball3, base_ang_vel3, projected_gravity3, dof_pos_minus_default22, dof_vel22, last_action22",
+    "raw_ball_world_pos": [
+      -5.216350555419922,
+      -8.836687088012695,
+      0.45430901646614075
+    ],
+    "torso_world_pos": [
+      -10.141383171081543,
+      -9.899313926696777,
+      0.37240201234817505
+    ],
+    "ball_delta_world": [
+      4.925032615661621,
+      1.062626838684082,
+      0.0819070041179657
+    ],
+    "ball_pos_local_expected": [
+      4.925032615661621,
+      1.062626838684082,
+      0.0819070041179657
+    ],
+    "obs_ball_feature": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ball_vel_world": [
+      -5.90576696395874,
+      -0.5975361466407776,
+      4.521958827972412
+    ],
+    "ball_vel_local_privileged": [
+      -5.90576696395874,
+      -0.5975361466407776,
+      4.521958827972412
+    ],
+    "obs_base_ang_vel": [
+      1.0362330675125122,
+      -6.0634918212890625,
+      -2.143977403640747
+    ],
+    "base_ang_vel_local_expected_scaled": [
+      1.0362330675125122,
+      -6.0634918212890625,
+      -2.143977403640747
+    ],
+    "obs_projected_gravity": [
+      -0.0534689761698246,
+      -0.15659761428833008,
+      -0.9862139821052551
+    ],
+    "projected_gravity_expected": [
+      -0.0534689761698246,
+      -0.15659761428833008,
+      -0.9862139821052551
+    ],
+    "last_action_max_abs": 0.0,
+    "history_nonzero_counts_per_frame": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      6
+    ],
+    "checkpoint": "legged_gym/logs/q1/stand_urdf_5_014_rand_weak/model_4200.pt",
+    "policy_current_learning_iteration": 4200,
+    "action_mean_abs": 1.080712914466858,
+    "action_max_abs": 4.606418609619141,
+    "top5_action_joints": [
+      {
+        "index": 7,
+        "joint": "right_hip_roll_joint",
+        "abs_action": 4.606418609619141,
+        "signed_action": -4.606418609619141
+      },
+      {
+        "index": 1,
+        "joint": "left_hip_roll_joint",
+        "abs_action": 4.160655975341797,
+        "signed_action": 4.160655975341797
+      },
+      {
+        "index": 5,
+        "joint": "left_ankle_roll_joint",
+        "abs_action": 3.4734420776367188,
+        "signed_action": -3.4734420776367188
+      },
+      {
+        "index": 11,
+        "joint": "right_ankle_roll_joint",
+        "abs_action": 1.843233346939087,
+        "signed_action": 1.843233346939087
+      },
+      {
+        "index": 10,
+        "joint": "right_ankle_pitch_joint",
+        "abs_action": 1.221551537513733,
+        "signed_action": -1.221551537513733
+      }
+    ]
+  },
+  "checkpoint_audit": [
+    {
+      "path": "legged_gym/logs/q1/stand_urdf_5_014_rand_weak/model_4200.pt",
+      "exists": true,
+      "iter": 4200,
+      "has_optimizer": true,
+      "has_model": true,
+      "num_model_tensors": 35
+    },
+    {
+      "path": "/root/autodl-tmp/Humanoid-Goalkeeper/legged_gym/logs/q1/stand_urdf_5_014_rand_weak/model_0.pt",
+      "exists": true,
+      "iter": 1,
+      "has_optimizer": true,
+      "has_model": true,
+      "num_model_tensors": 35
+    },
+    {
+      "path": "/root/autodl-tmp/Humanoid-Goalkeeper/legged_gym/logs/q1/stand_urdf_5_014/model_9500.pt",
+      "exists": true,
+      "iter": 9500,
+      "has_optimizer": true,
+      "has_model": true,
+      "num_model_tensors": 35
+    }
+  ]
+}

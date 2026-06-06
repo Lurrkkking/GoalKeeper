@@ -205,7 +205,7 @@ class LeggedRobot(BaseTask):
         self.end_target[approachidx, :] = self.ball_states[approachidx, :3].clone()
         self.end_target[:, 0] = torch.clip(self.end_target[:, 0], min = self.env_origins[:, 0] + 0.1, max = self.env_origins[:, 0] + 1.0)
 
-        hand_pos = self.rigid_body_states[:, self.hand_indices, :3].clone()
+        hand_pos = self._get_hand_pos()
         hand_pos_l, hand_pos_r =  hand_pos[:,0,:], hand_pos[:,1,:]
 
         region0_dis = torch.norm(self.end_target[self.end_regions == 0] - hand_pos_l[self.end_regions == 0], dim = 1)
@@ -308,6 +308,9 @@ class LeggedRobot(BaseTask):
             self.Kp_factors[env_ids] = torch_rand_float(self.cfg.domain_rand.kp_range[0], self.cfg.domain_rand.kp_range[1], (len(env_ids), self.num_dof), device=self.device)
         if self.cfg.domain_rand.randomize_kd:
             self.Kd_factors[env_ids] = torch_rand_float(self.cfg.domain_rand.kd_range[0], self.cfg.domain_rand.kd_range[1], (len(env_ids), self.num_dof), device=self.device)
+        if getattr(self.cfg.domain_rand, 'randomize_motor_strength', False):
+            low, high = self.cfg.domain_rand.motor_strength_range
+            self.motor_strength[env_ids] = torch_rand_float(low, high, (len(env_ids), self.num_actions), device=self.device)
         if self.cfg.domain_rand.randomize_actuation_offset:
             self.actuation_offset[env_ids] = torch_rand_float(self.cfg.domain_rand.actuation_offset_range[0], self.cfg.domain_rand.actuation_offset_range[1], (len(env_ids), self.num_dof), device=self.device) * self.torque_limits.unsqueeze(0)
             self.actuation_offset[:, self.curriculum_dof_indices] = 0.
@@ -408,7 +411,7 @@ class LeggedRobot(BaseTask):
         """ Computes observations
         """
 
-        hand_pos = self.rigid_body_states[:, self.hand_indices, :3].clone() 
+        hand_pos = self._get_hand_pos()
         hand_pos_l, hand_pos_r = quat_rotate_inverse(self.base_quat, hand_pos[:,0,:]- self.torso_pos), quat_rotate_inverse(self.base_quat, hand_pos[:,1,:]- self.torso_pos)
 
         initial_vanish = (self.catchstep < self.startstep).view(-1, 1)
@@ -452,7 +455,7 @@ class LeggedRobot(BaseTask):
         """ Computes observations
         """
         
-        hand_pos = self.rigid_body_states[:, self.hand_indices, :3].clone() 
+        hand_pos = self._get_hand_pos()
         hand_pos_l, hand_pos_r = quat_rotate_inverse(self.base_quat, hand_pos[:,0,:]- self.torso_pos), quat_rotate_inverse(self.base_quat, hand_pos[:,1,:]- self.torso_pos)
         
 
@@ -671,6 +674,7 @@ class LeggedRobot(BaseTask):
         else:
             raise NameError(f"Unknown controller type: {control_type}")
         
+        torques = torques * self.motor_strength
         torques = torques + self.actuation_offset + self.joint_injection
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
@@ -837,6 +841,16 @@ class LeggedRobot(BaseTask):
 
         return ball_vel
 
+    def _get_hand_pos(self):
+        """Return hand positions with optional body-frame offset (e.g., forearm tip instead of COM)."""
+        hand_com = self.rigid_body_states[:, self.hand_indices, :3].clone()  # (N, 2, 3)
+        offset_cfg = getattr(self.cfg.asset, 'hand_offset', None)
+        if offset_cfg is not None:
+            offset = torch.tensor(offset_cfg, device=self.device, dtype=hand_com.dtype)  # (3,)
+            if torch.any(offset != 0.0):
+                hand_quat = self.rigid_body_states[:, self.hand_indices, 3:7]  # (N, 2, 4)
+                hand_com = hand_com + quat_rotate(hand_quat, offset.view(1, 1, 3))
+        return hand_com
 
 
     def _get_noise_scale_vec(self, cfg):
@@ -1073,6 +1087,7 @@ class LeggedRobot(BaseTask):
         #randomize kp, kd, motor strength
         self.Kp_factors = torch.ones(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.Kd_factors = torch.ones(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.motor_strength = torch.ones(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.joint_injection = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.actuation_offset = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         
@@ -1080,6 +1095,9 @@ class LeggedRobot(BaseTask):
             self.Kp_factors = torch_rand_float(self.cfg.domain_rand.kp_range[0], self.cfg.domain_rand.kp_range[1], (self.num_envs, self.num_dof), device=self.device)
         if self.cfg.domain_rand.randomize_kd:
             self.Kd_factors = torch_rand_float(self.cfg.domain_rand.kd_range[0], self.cfg.domain_rand.kd_range[1], (self.num_envs, self.num_dof), device=self.device)
+        if getattr(self.cfg.domain_rand, 'randomize_motor_strength', False):
+            low, high = self.cfg.domain_rand.motor_strength_range
+            self.motor_strength = torch_rand_float(low, high, (self.num_envs, self.num_actions), device=self.device)
         if self.cfg.domain_rand.randomize_joint_injection:
             self.joint_injection = torch_rand_float(self.cfg.domain_rand.joint_injection_range[0], self.cfg.domain_rand.joint_injection_range[1], (self.num_envs, self.num_dof), device=self.device) * self.torque_limits.unsqueeze(0)
             self.joint_injection[:, self.curriculum_dof_indices] = 0.0
@@ -1090,7 +1108,20 @@ class LeggedRobot(BaseTask):
             self.payload = torch_rand_float(self.cfg.domain_rand.payload_mass_range[0], self.cfg.domain_rand.payload_mass_range[1], (self.num_envs, 1), device=self.device)
         if self.cfg.domain_rand.randomize_com_displacement:
             self.com_displacement = torch_rand_float(self.cfg.domain_rand.com_displacement_range[0], self.cfg.domain_rand.com_displacement_range[1], (self.num_envs, 3), device=self.device)
-            
+
+        # --- DR log (once) ---
+        dr = self.cfg.domain_rand
+        print(f"[DR] randomize_friction={dr.randomize_friction} range={list(dr.friction_range)}")
+        print(f"[DR] randomize_payload_mass={dr.randomize_payload_mass} range={list(dr.payload_mass_range)}")
+        print(f"[DR] push_robots={dr.push_robots} interval={dr.push_interval_s} max_push_vel_xy={dr.max_push_vel_xy}")
+        if getattr(dr, 'randomize_motor_strength', False):
+            print(f"[DR] randomize_motor_strength=True range={list(dr.motor_strength_range)}")
+        if dr.randomize_kp:
+            print(f"[DR] randomize_pd_gain=True kp={list(dr.kp_range)} kd={list(dr.kd_range)}")
+        print(f"[DR] motor_strength min={self.motor_strength.min():.3f} max={self.motor_strength.max():.3f} mean={self.motor_strength.mean():.3f}")
+        print(f"[DR] Kp_factors min={self.Kp_factors.min():.3f} max={self.Kp_factors.max():.3f} mean={self.Kp_factors.mean():.3f}")
+        print(f"[DR] Kd_factors min={self.Kd_factors.min():.3f} max={self.Kd_factors.max():.3f} mean={self.Kd_factors.mean():.3f}")
+
         #store friction and restitution
         self.friction_coeffs = torch.ones(self.num_envs, 1, dtype=torch.float, device=self.device, requires_grad=False)
         self.restitution_coeffs = torch.zeros(self.num_envs, 1, dtype=torch.float, device=self.device, requires_grad=False)

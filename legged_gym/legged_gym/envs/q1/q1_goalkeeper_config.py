@@ -21,47 +21,47 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         ball_gravity = True
         play = False
 
-    # Q1 easy-mode commands: narrower, lower, slower than G1
+    # Q1 commands: G1 ranges scaled by 0.65 (height-based)
     class commands:
         class ranges_0:
-            height = [0.15, 0.55]; width = [0.0, 0.40]
-            maxh = [0.08, 0.65]; maxw = [0.0, 0.65]
-            evalh = [0.12, 0.60]; evalw = [0.0, 0.50]
+            height = [0.26, 0.78]; width = [0.13, 0.78]
+            maxh = [0.20, 0.98]; maxw = [0.0, 1.17]
+            evalh = [0.20, 0.98]; evalw = [0.0, 0.98]
         class ranges_1:
-            height = [0.15, 0.55]; width = [-0.40, 0.0]
-            maxh = [0.08, 0.65]; maxw = [-0.65, 0.0]
-            evalh = [0.12, 0.60]; evalw = [-0.50, 0.0]
+            height = [0.26, 0.78]; width = [-0.78, -0.13]
+            maxh = [0.20, 0.98]; maxw = [-1.17, 0.0]
+            evalh = [0.20, 0.98]; evalw = [-0.98, 0.0]
         class ranges_2:
-            height = [0.45, 0.85]; width = [0.0, 0.40]
-            maxh = [0.35, 0.95]; maxw = [0.0, 0.65]
-            evalh = [0.40, 0.90]; evalw = [0.0, 0.50]
+            height = [0.78, 1.04]; width = [0.0, 0.65]
+            maxh = [0.78, 1.17]; maxw = [0.0, 0.98]
+            evalh = [0.78, 1.17]; evalw = [0.0, 0.98]
         class ranges_3:
-            height = [0.45, 0.85]; width = [-0.40, 0.0]
-            maxh = [0.35, 0.95]; maxw = [-0.65, 0.0]
-            evalh = [0.40, 0.90]; evalw = [-0.50, 0.0]
+            height = [0.78, 1.04]; width = [-0.65, 0.0]
+            maxh = [0.78, 1.17]; maxw = [-0.98, 0.0]
+            evalh = [0.78, 1.17]; evalw = [-0.98, 0.0]
         class ranges_4:
-            height = [0.08, 0.28]; width = [0.0, 0.40]
-            maxh = [0.05, 0.35]; maxw = [0.0, 0.65]
-            evalh = [0.06, 0.30]; evalw = [0.0, 0.50]
+            height = [0.07, 0.20]; width = [0.13, 0.78]
+            maxh = [0.07, 0.20]; maxw = [0.0, 1.17]
+            evalh = [0.07, 0.20]; evalw = [0.0, 0.98]
         class ranges_5:
-            height = [0.08, 0.28]; width = [-0.40, 0.0]
-            maxh = [0.05, 0.35]; maxw = [-0.65, 0.0]
-            evalh = [0.06, 0.30]; evalw = [-0.50, 0.0]
+            height = [0.07, 0.20]; width = [-0.78, -0.13]
+            maxh = [0.07, 0.20]; maxw = [-1.17, 0.0]
+            evalh = [0.07, 0.20]; evalw = [-0.98, 0.0]
 
     class init_state(LeggedRobotCfg.init_state):
-        pos = [0.0, 0.0, 0.41]
+        pos = [0.0, 0.0, 0.415]
         default_joint_angles = {
-            'left_hip_pitch_joint': 0.0,  'left_hip_roll_joint': 0.0,    'left_hip_yaw_joint': 0.0,
-            'left_knee_joint': 0.0,        'left_ankle_pitch_joint': 0.0, 'left_ankle_roll_joint': 0.0,
-            'right_hip_pitch_joint': 0.0, 'right_hip_roll_joint': 0.0,    'right_hip_yaw_joint': 0.0,
-            'right_knee_joint': 0.0,       'right_ankle_pitch_joint': 0.0, 'right_ankle_roll_joint': 0.0,
+            'left_hip_pitch_joint': -0.087,  'left_hip_roll_joint': 0.0,    'left_hip_yaw_joint': 0.0,
+            'left_knee_joint': 0.175,        'left_ankle_pitch_joint': -0.087, 'left_ankle_roll_joint': 0.0,
+            'right_hip_pitch_joint': -0.087, 'right_hip_roll_joint': 0.0,    'right_hip_yaw_joint': 0.0,
+            'right_knee_joint': 0.175,       'right_ankle_pitch_joint': -0.087, 'right_ankle_roll_joint': 0.0,
             'waist_roll_joint': 0.0,        'waist_yaw_joint': 0.0,
             'left_shoulder_pitch_joint': 0.0,  'left_shoulder_roll_joint': 0.0,
             'left_shoulder_yaw_joint': 0.0,    'left_elbow_joint': 0.0,
             'right_shoulder_pitch_joint': 0.0, 'right_shoulder_roll_joint': 0.0,
             'right_shoulder_yaw_joint': 0.0,   'right_elbow_joint': 0.0,
         }
-        init_pos = [0.0]*22
+        init_pos = [-0.087,0,0,0.175,-0.087,0,-0.087,0,0,0.175,-0.087,0,0,0,0,0,0,0,0,0,0,0]
         # Boost anti-spin torque (applied after env init)
         torque_limits_scale = {
             'left_hip_yaw_joint': 2.0, 'right_hip_yaw_joint': 2.0,
@@ -71,10 +71,10 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
     class control(LeggedRobotCfg.control):
         control_type = 'P'
         # Normal Q1 PD stiffness (from q1_22dof_rl_collision)
-        stiffness = {'hip_yaw': 60, 'hip_roll': 60, 'hip_pitch': 60, 'knee': 80, 'ankle': 25,
-                     'waist': 50, 'shoulder': 20, 'elbow': 20}
-        damping = {'hip_yaw': 2.0, 'hip_roll': 2.0, 'hip_pitch': 2.0, 'knee': 3.0, 'ankle': 0.9,
-                   'waist': 2.0, 'shoulder': 0.8, 'elbow': 0.8}
+        stiffness = {'hip_yaw': 30, 'hip_roll': 30, 'hip_pitch': 30, 'knee': 30, 'ankle': 20,
+                     'waist': 80, 'shoulder': 20, 'elbow': 20}
+        damping = {'hip_yaw': 1.5, 'hip_roll': 1.5, 'hip_pitch': 1.5, 'knee': 1.5, 'ankle': 1.0,
+                   'waist': 2.0, 'shoulder': 1.0, 'elbow': 1.0}
         action_scale = 0.25
         # Q1 per-joint action scale: reduce crossing-prone joints, boost arms
         per_joint_action_scale = {
@@ -109,7 +109,7 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class termination:
         knee_height_threshold = 0.06
-        gravity_threshold = 0.95  # raised for stiff box collision URDF
+        gravity_threshold = 0.8
 
     class terrain:
         static_friction = 1.0; dynamic_friction = 1.0; restitution = 0.
@@ -142,30 +142,36 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         replace_cylinder_with_capsule = True; flip_visual_attachments = False
         density = 1.0; angular_damping = 0.0; linear_damping = 0.0
         max_angular_velocity = 1000.; max_linear_velocity = 1000.
-        armature = 0.001; thickness = 0.01
+        armature = 0.004; thickness = 0.01
+        hand_offset = [0.14, 0.0, 0.0]   # push reference point from elbow COM toward forearm tip (inertia: L≈24cm, COM@9.8cm, tip@14cm from COM)
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_joint_injection = False; randomize_actuation_offset = False
-        randomize_payload_mass = False; randomize_com_displacement = False
+        randomize_payload_mass = True; randomize_com_displacement = False
         randomize_link_mass = False
-        randomize_friction = False  # Q1 box feet: fixed high friction to prevent spin
-        friction_range = [0.8, 1.2]
+        randomize_friction = True
+        friction_range = [0.6, 1.4]
         randomize_restitution = False
         restitution_range = [0.0, 0.1]
-        randomize_kp = False; randomize_kd = False
+        randomize_kp = True; randomize_kd = True
+        kp_range = [0.85, 1.15]; kd_range = [0.85, 1.15]
         randomize_initial_joint_pos = False
         continue_keep = False  # needed by leg ddl robot reset
-        push_robots = False; ball_interval_s = 0.5; max_ball_vel = 0.5
+        push_robots = True; push_interval_s = 4.0; max_push_vel_xy = 0.25
+        ball_interval_s = 0.5; max_ball_vel = 0.5
         randomize_reset_velocity = False  # Q1 goalkeeper: zero reset velocity
+        randomize_motor_strength = True
+        motor_strength_range = [0.85, 1.15]
+        payload_mass_range = [-0.5, 1.0]
 
     class rewards(LeggedRobotCfg.rewards):
         class scales:
-            eereach = 10.0; success = 10.0; stopball = 100.0
-            stayonline = -1.5; noretreat = -1.5
-            successland = 4.0; feetorientaion = 3.0
-            penalize_sharpcontact = -100.; penalize_kneeheight = -100.; feet_slippage = 5.0
+            eereach = 20.0; success = 20.0; stopball = 150.0
+            stayonline = -1.0; noretreat = -1.0
+            successland = 10.0; feetorientaion = 1.0
+            penalize_sharpcontact = -100.; penalize_kneeheight = -100.; feet_slippage = 3.0
             postorientation = 3.0; postangvel = 3.0; postupperdofpos = 1.0; postwaistdofpos = 1.0; postlinvel = 1.0
-            ang_vel_xy = -0.3; dof_acc = -2.5e-7; smoothness = -0.1
+            ang_vel_xy = -0.3; dof_acc = -2.5e-7; smoothness = -0.15
             torques = -1e-5; dof_vel = -5e-4
             dof_pos_limits = -3.0; dof_vel_limits = -2.0; torque_limits = -3.0
             penalty_feet_separation = 0.0  # disabled: must match feet_sep_enabled=False
@@ -187,6 +193,25 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class amp:
         obs_type = 'dof'; num_obs = 22 * 2; amp_coef = 0.0; num_steps = 2
+
+
+class Q1GoalkeeperCfgHard(Q1GoalkeeperCfg):
+    """Harder domain randomization for sim2sim robustness."""
+    class domain_rand(Q1GoalkeeperCfg.domain_rand):
+        randomize_friction = True
+        friction_range = [0.3, 2.0]           # wider: ice to sticky
+        randomize_payload_mass = True
+        payload_mass_range = [-1.5, 3.0]      # wider mass variation
+        push_robots = True; push_interval_s = 3.0; max_push_vel_xy = 0.5  # stronger push
+        ball_interval_s = 0.3; max_ball_vel = 1.0
+        randomize_kp = True; randomize_kd = True
+        kp_range = [0.6, 1.5]; kd_range = [0.6, 1.5]  # wider PD gain variation
+        randomize_motor_strength = True
+        motor_strength_range = [0.6, 1.5]     # wider motor strength
+        randomize_initial_joint_pos = True
+        initial_joint_pos_scale = [0.8, 1.2]
+        initial_joint_pos_offset = [-0.05, 0.05]
+        randomize_reset_velocity = True        # random initial velocity
 
 
 class Q1GoalkeeperCfgPPO(LeggedRobotCfgPPO):

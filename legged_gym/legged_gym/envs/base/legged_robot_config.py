@@ -146,6 +146,7 @@ class LeggedRobotCfg(BaseConfig):
         max_linear_velocity = 1000.
         armature = 0.
         thickness = 0.01
+        hand_offset = [0.0, 0.0, 0.0]   # body-frame offset from hand COM to end-effector tip (e.g. forearm)
 
     class domain_rand:
         
@@ -183,6 +184,9 @@ class LeggedRobotCfg(BaseConfig):
         push_robots = False
         push_interval_s = 5
         max_push_vel_xy = 1.
+
+        randomize_motor_strength = False
+        motor_strength_range = [0.85, 1.15]
 
         delay = False
 
