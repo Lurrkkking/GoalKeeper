@@ -13,7 +13,7 @@ policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper.onnx"
 # --- Simulation ---
 simulation_dt: 0.002       # 500 Hz MuJoCo physics (more stable than 200Hz for body-ground contact)
 control_decimation: 10      # policy runs at 50 Hz → policy_dt = 0.002 * 10 = 0.02s (matches IsaacGym training)
-simulation_duration: 5.0    # seconds
+simulation_duration: 3.0    # seconds (150 control steps at 50Hz)
 
 # --- Observation dimensions ---
 num_actions: 22
@@ -127,8 +127,8 @@ shot_init_pos: [4.0, 0.0, 0.5]     # ~middle of training range [3,5]
 shot_init_vel: [-6.14, 0.0, 3.43]
 
 # --- IMU body name (must match MuJoCo XML body name) ---
-imu_body_name: "torso_link"
-torso_body_name: "torso_link"
+imu_body_name: "pelvis"       # matches training upper_body_link (base_quat source)
+torso_body_name: "torso_link"  # ball position reference in training
 
 # --- Safety ---
 max_abs_qacc: 200000.0

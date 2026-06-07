@@ -166,7 +166,7 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class rewards(LeggedRobotCfg.rewards):
         class scales:
-            eereach = 20.0; success = 20.0; stopball = 150.0
+            eereach = 25.0; success = 20.0; stopball = 250.0
             stayonline = -1.0; noretreat = -1.0
             successland = 10.0; feetorientaion = 1.0
             penalize_sharpcontact = -100.; penalize_kneeheight = -100.; feet_slippage = 3.0
@@ -199,19 +199,95 @@ class Q1GoalkeeperCfgHard(Q1GoalkeeperCfg):
     """Harder domain randomization for sim2sim robustness."""
     class domain_rand(Q1GoalkeeperCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.3, 2.0]           # wider: ice to sticky
+        friction_range = [0.3, 2.0]
         randomize_payload_mass = True
-        payload_mass_range = [-1.5, 3.0]      # wider mass variation
-        push_robots = True; push_interval_s = 3.0; max_push_vel_xy = 0.5  # stronger push
+        payload_mass_range = [-1.5, 3.0]
+        push_robots = True; push_interval_s = 3.0; max_push_vel_xy = 0.5
         ball_interval_s = 0.3; max_ball_vel = 1.0
         randomize_kp = True; randomize_kd = True
-        kp_range = [0.6, 1.5]; kd_range = [0.6, 1.5]  # wider PD gain variation
+        kp_range = [0.6, 1.5]; kd_range = [0.6, 1.5]
         randomize_motor_strength = True
-        motor_strength_range = [0.6, 1.5]     # wider motor strength
+        motor_strength_range = [0.6, 1.5]
         randomize_initial_joint_pos = True
         initial_joint_pos_scale = [0.8, 1.2]
         initial_joint_pos_offset = [-0.05, 0.05]
-        randomize_reset_velocity = True        # random initial velocity
+        randomize_reset_velocity = True
+
+
+# --- Tier A: Medium DR (extends Hard with control/contact/ball/recovery DR) ---
+class Q1GoalkeeperCfgMediumDR(Q1GoalkeeperCfgHard):
+    """Tier A: Medium DR — action delay, torque noise, joint damping, foot slip, ball dropout, root tilt."""
+    class domain_rand(Q1GoalkeeperCfgHard.domain_rand):
+        # Action DR
+        randomize_action_delay = True
+        action_delay_steps = 2         # 0-2 policy steps
+        randomize_action_filter = True
+        action_filter_alpha_min = 0.4  # low-pass alpha
+        randomize_torque_noise = True
+        torque_noise_pct = 0.03        # ±3% torque noise
+        # Joint dynamics DR
+        randomize_joint_damping = True
+        joint_damping_scale = [0.5, 2.0]
+        randomize_armature_scale = True
+        armature_scale = [0.5, 2.0]
+        # Contact DR
+        push_during_ball = True
+        push_during_ball_vel = 0.15
+        randomize_restitution = True
+        restitution_range = [0.0, 0.05]
+        # Ball obs DR
+        randomize_ball_obs_noise = True
+        ball_obs_noise = 0.03          # ±0.03m position noise
+        randomize_ball_obs_dropout = True
+        ball_obs_dropout_pct = 0.10    # 10% dropout
+        # Recovery DR
+        randomize_initial_root_tilt = True
+        initial_root_tilt_deg = 5.0    # ±5° initial tilt
+        # Side curriculum
+        oversample_right_side = True
+        right_side_ratio = 0.5         # 50% right-side shots
+
+
+# --- Tier B: Contact DR (focus on foot-ground contact robustness) ---
+class Q1GoalkeeperCfgContactDR(Q1GoalkeeperCfgMediumDR):
+    """Tier B: Contact DR — ground slope, push at contact loss, ball obs jitter/delay."""
+    class domain_rand(Q1GoalkeeperCfgMediumDR.domain_rand):
+        randomize_ground_slope = True
+        ground_slope_deg = 3.0         # ±3° ground tilt
+        randomize_ground_height = True
+        ground_height_noise = 0.01     # ±0.01m
+        push_at_contact_loss = True
+        push_at_contact_loss_vel = 0.05
+        randomize_ball_obs_delay = True
+        ball_obs_delay_steps = 2       # 0-2 steps delay
+        ball_vanish_jitter = True
+        ball_vanish_jitter_steps = 2   # ±1-2 steps vanish jitter
+        randomize_contact_friction = True
+        contact_friction_range = [0.4, 1.6]
+        # Stronger joint output DR
+        torque_noise_pct = 0.05        # 3→5% torque noise
+        action_delay_steps = 3         # 2→3 steps delay
+        action_filter_alpha_min = 0.3  # 0.4→0.3 (stronger smoothing)
+
+
+# --- Tier C: Failure-case finetune (target right-side asymmetry) ---
+class Q1GoalkeeperCfgFinetuneDR(Q1GoalkeeperCfgContactDR):
+    """Tier C: Failure-case finetune — right-side oversample, hip_roll penalty, foot contact keep, mirror aug."""
+    class domain_rand(Q1GoalkeeperCfgContactDR.domain_rand):
+        oversample_right_side = True
+        right_side_ratio = 0.6         # 60% right-side (mode 1,3,5)
+        side_wise_metrics = True       # track left/right success separately
+        mirror_augmentation = True     # mirror left→right samples
+        mirror_augmentation_pct = 0.3  # 30% of samples mirrored
+        # Penalty DR
+        hip_roll_action_penalty = True
+        hip_roll_penalty_weight = 0.01
+        foot_contact_keep_bonus = True
+        foot_contact_keep_weight = 0.5
+        root_pitch_penalty_after_ball = True
+        root_pitch_penalty_weight = 0.05
+        foot_slip_penalty = True
+        foot_slip_penalty_weight = 0.01
 
 
 class Q1GoalkeeperCfgPPO(LeggedRobotCfgPPO):

@@ -293,20 +293,22 @@ SHOT_MODES = {
     5: {"height": [0.07, 0.20], "width": [-0.78, -0.13]},   # left, low
 }
 
-def compute_shot_from_mode(mode, g=9.81, t_flight=0.7):
-    """Compute shot_init_pos and shot_init_vel from training mode, matching assign_ball_states logic."""
+def compute_shot_from_mode(mode, g=9.81, t_flight=None):
+    """Compute shot_init_pos and shot_init_vel matching assign_ball_states random sampling."""
     if mode not in SHOT_MODES:
         raise ValueError(f"Invalid shot mode {mode}, must be 0-5")
     r = SHOT_MODES[mode]
-    # Use midpoints of ranges
-    start_x = 4.0  # middle of training [3, 5]
-    start_y = (r["width"][0] + r["width"][1]) / 2.0
-    start_z = (r["height"][0] + r["height"][1]) / 2.0
-    # End behind robot at same height/width
-    end_x = -0.3  # middle of [-0.6, -0.1]
-    end_y = start_y
-    end_z = start_z
-    # Velocity from training formula
+    w0, w1 = r["width"]
+    h0, h1 = r["height"]
+    # Random sampling matching training assign_ball_states
+    start_x = np.random.rand() * 2.0 + 3.0          # [3, 5]
+    start_y = np.random.rand() * (w1 - w0) + w0     # [w0, w1]
+    start_z = np.random.rand() * (h1 - h0) + h0     # [h0, h1]
+    end_x = -np.random.rand() * 0.5 - 0.1            # [-0.6, -0.1]
+    end_y = np.random.rand() * (w1 - w0) + w0       # [w0, w1]
+    end_z = np.random.rand() * (h1 - h0) + h0       # [h0, h1]
+    if t_flight is None:
+        t_flight = 0.4 + np.random.rand() * 0.6      # [0.4, 1.0]
     vx = (end_x - start_x) / t_flight
     vy = (end_y - start_y) / t_flight
     vz = (end_z - start_z + 0.5 * g * t_flight**2) / t_flight
@@ -762,6 +764,15 @@ def run_mujoco(cfg, args):
             # Ablation D: override ball_feature with fixed value
             if ablation == "D_fixed_ball" and fixed_ball_feat is not None:
                 ball_feature = fixed_ball_feat.copy()
+            # Task 3B: zero ball obs
+            if getattr(args, "zero_ball_obs", False):
+                ball_feature = np.zeros(3, dtype=np.float32)
+            # IsaacGym initial_vanish: ball hidden for first ~10 policy steps after launch
+            # Training: catchstep=50 at reset, startstep=40-47, vanish when catchstep < startstep
+            # catchstep decrements each step, so ball visible after ~50-45=5 to 50-40=10 steps
+            vanish_steps = cfg.get("ball_vanish_steps", 10)
+            if not getattr(args, "no_ball_launch", False) and control_step < vanish_steps:
+                ball_feature = np.zeros(3, dtype=np.float32)
 
             single_obs = build_single_obs(robot_state, ball_feature, last_action, cfg)
 
@@ -1025,6 +1036,8 @@ def parse_args():
                         help="Comma-separated ball_feature [x,y,z] for ablation D")
     parser.add_argument("--shot-mode", type=int, default=-1,
                         help="Ball shot mode 0-5 (matches training 6 modes), -1=use config shot_init_pos/vel")
+    parser.add_argument("--zero-ball-obs", action="store_true",
+                        help="Force ball_feature=0 in all obs frames (Task 3B: isolate ball obs effect)")
     parser.add_argument("--debug_zero_action", action="store_true",
                         help="Skip policy inference and keep target at init/default standing pose")
     parser.add_argument("--debug_policy_no_apply", action="store_true",

@@ -126,13 +126,27 @@ class LeggedRobot(BaseTask):
         """
         clip_actions = self.cfg.normalization.clip_actions
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
-    
+
+        # Tier A DR: action low-pass filter
+        if getattr(self.cfg.domain_rand, 'randomize_action_filter', False):
+            alpha = torch_rand_float(self.cfg.domain_rand.action_filter_alpha_min, 1.0,
+                                     (self.num_envs, 1), device=self.device)
+            self.actions = alpha * self.actions + (1.0 - alpha) * self.last_actions
+
         self.delayed_actions = self.actions.clone().view(1, self.num_envs, self.num_actions).repeat(self.cfg.control.decimation, 1, 1)
         delay_steps = torch.randint(0, self.cfg.control.decimation, (self.num_envs, 1), device=self.device)
         if self.cfg.domain_rand.delay:
             for i in range(self.cfg.control.decimation):
                 self.delayed_actions[i] = self.last_actions + (self.actions - self.last_actions) * (i >= delay_steps)
-                
+
+        # Tier A DR: random action delay per env
+        if getattr(self.cfg.domain_rand, 'randomize_action_delay', False):
+            max_delay = self.cfg.domain_rand.action_delay_steps
+            env_delay = torch.randint(0, max_delay + 1, (self.num_envs, 1), device=self.device)
+            for i in range(self.cfg.control.decimation):
+                mask = (i < env_delay).float()
+                self.delayed_actions[i] = self.last_actions + (self.actions - self.last_actions) * mask
+
         # Randomize Joint Injections
         if self.cfg.domain_rand.randomize_joint_injection:
             self.joint_injection = torch_rand_float(self.cfg.domain_rand.joint_injection_range[0], self.cfg.domain_rand.joint_injection_range[1], (self.num_envs, self.num_dof), device=self.device) * self.torque_limits.unsqueeze(0)
@@ -446,6 +460,15 @@ class LeggedRobot(BaseTask):
             current_actor_obs[:, :self.num_ballobs] =  current_actor_obs[:, :self.num_ballobs] * flying * random_vanish
         else:
             current_actor_obs[:, :self.num_ballobs] =  current_actor_obs[:, :self.num_ballobs] * flying
+        # Tier A DR: ball obs noise
+        if getattr(self.cfg.domain_rand, 'randomize_ball_obs_noise', False) and not self.add_noise:
+            noise_scale = self.cfg.domain_rand.ball_obs_noise
+            current_actor_obs[:, :self.num_ballobs] += (2.0 * torch.rand_like(current_actor_obs[:, :self.num_ballobs]) - 1.0) * noise_scale
+        # Tier A DR: ball obs dropout
+        if getattr(self.cfg.domain_rand, 'randomize_ball_obs_dropout', False):
+            dropout_pct = self.cfg.domain_rand.ball_obs_dropout_pct
+            mask = (torch.rand(self.num_envs, 1, device=self.device) > dropout_pct).float()
+            current_actor_obs[:, :self.num_ballobs] *= mask
 
         self.obs_buf = torch.cat((self.obs_buf[:, self.num_one_step_obs:self.actor_obs_length], current_actor_obs), dim=-1)
 
@@ -676,6 +699,11 @@ class LeggedRobot(BaseTask):
         
         torques = torques * self.motor_strength
         torques = torques + self.actuation_offset + self.joint_injection
+        # Tier A DR: torque noise
+        if getattr(self.cfg.domain_rand, 'randomize_torque_noise', False):
+            noise_pct = self.cfg.domain_rand.torque_noise_pct
+            noise = (2.0 * torch.rand_like(torques) - 1.0) * noise_pct * self.torque_limits.unsqueeze(0)
+            torques = torques + noise
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
     def _reset_dofs(self, env_ids):
