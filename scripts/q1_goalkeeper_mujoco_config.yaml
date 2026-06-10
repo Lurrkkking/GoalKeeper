@@ -8,7 +8,7 @@
 # ball mass=0.1 kg, radius=0.1 m, friction≈0.5
 # body friction=1.0, condim=3
 xml_path: "q1_abi_B6_g1_joint.xml"  # B6: armature=0.004, damping=0.52, frictionloss=0.65 + G1-style collision
-policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper.onnx"
+policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper_3900.onnx"
 
 # --- Simulation ---
 simulation_dt: 0.002       # 500 Hz MuJoCo physics (more stable than 200Hz for body-ground contact)
