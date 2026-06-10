@@ -1,0 +1,19 @@
+{
+  "category": "jump_like",
+  "recommendation": "use_as_jump_prior",
+  "env_id": 3,
+  "episode_id": 19,
+  "root_z_delta": 0.08248704671859741,
+  "root_vz_max": 1.7527159452438354,
+  "upright_min": 0.5517998933792114,
+  "both_feet_airborne_duration": 0.29999999329447746,
+  "contact_recovered_after_airborne": true,
+  "nearest_body_name": "right_wrist_yaw_link",
+  "nearest_body_min_distance": 0.09974659979343414,
+  "ball_z_at_block": 1.2833960056304932,
+  "root_z_at_block": 0.8514073491096497,
+  "foot_contact_left_at_block": false,
+  "foot_contact_right_at_block": false,
+  "block_time": 0.6399999856948853,
+  "root_pitch_max": 0.09794062964265697
+}

@@ -20,6 +20,7 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         episode_length_s = 3
         ball_gravity = True
         play = False
+        mode_weights = [1, 1, 1, 1, 1, 1]  # uniform, set e.g. [1,1,2,2,1,1] for high-ball oversample
 
     # Q1 commands: G1 ranges scaled by 0.65 (height-based)
     class commands:
@@ -166,25 +167,36 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class rewards(LeggedRobotCfg.rewards):
         class scales:
-            eereach = 25.0; success = 20.0; stopball = 250.0
+            eereach = 30.0; success = 20.0; stopball = 300.0
             stayonline = -1.0; noretreat = -1.0
-            successland = 10.0; feetorientaion = 1.0
+            successland = 5.0; feetorientaion = 1.0
             penalize_sharpcontact = -100.; penalize_kneeheight = -100.; feet_slippage = 3.0
             postorientation = 3.0; postangvel = 3.0; postupperdofpos = 1.0; postwaistdofpos = 1.0; postlinvel = 1.0
             ang_vel_xy = -0.3; dof_acc = -2.5e-7; smoothness = -0.15
             torques = -1e-5; dof_vel = -5e-4
-            dof_pos_limits = -3.0; dof_vel_limits = -2.0; torque_limits = -3.0
+            dof_pos_limits = -3.0; dof_vel_limits = -2.0; torque_limits = -2.0
             penalty_feet_separation = 0.0  # disabled: must match feet_sep_enabled=False
+            upright_penalty = -3.0         # proximity penalty for approaching gravity threshold (set 0 to disable)
+            highball_jump_height = 0.0       # reward root_z > 0.45 on high-ball modes (set 0 to disable)
+            highball_upward_velocity = 0.0   # reward root_vz > 0 on high-ball modes
+            highball_upright_penalty = -3.0  # extra upright penalty on high-ball modes only
         only_positive_rewards = False
+        successland_jump_threshold = 0.48    # root_z above this triggers 'has_in_air' (G1 default=0.55)
+        highball_jump_z_threshold = 0.45     # root_z above this starts earning jump reward
+        highball_jump_z_range = 0.15         # maps threshold→threshold+range to reward 0→1
         catch_th = 0.5; handheight_th = 1.0; reach_th = 0.2; strict_th = 0.15
         target_dof_pos_sigma = -20; tracking_sigma = 0.25; catch_sigma = 5.0
         soft_dof_pos_limit = 0.9; soft_dof_vel_limit = 0.9; soft_torque_limit = 0.95
+        # Upright penalty: penalises tilt toward gravity_threshold (0.8)
+        upright_threshold = 0.95             # danger starts when upright < this
+        upright_deadzone = 0.15              # maps threshold→gravity_threshold (0.8)
+        upright_ball_visible_only = True     # only penalise when ball is in flight
         # Q1 feet separation tracking
         feet_sep_enabled = False
         min_foot_sep = 0.12
         feet_cross_threshold = 0.06
         feet_too_close_threshold = 0.10
-        max_contact_force = 100000.  # raised for box collision URDF
+        max_contact_force = 500.  # raised for box collision URDF
 
     class dataset:
         folder = "{LEGGED_GYM_ROOT_DIR}/resources/datasets/goalkeeper"
@@ -288,6 +300,40 @@ class Q1GoalkeeperCfgFinetuneDR(Q1GoalkeeperCfgContactDR):
         root_pitch_penalty_weight = 0.05
         foot_slip_penalty = True
         foot_slip_penalty_weight = 0.01
+
+
+# ============================================================================
+# Weak Stage 1: Targeted hip-pitch / backward-fall DR (reduced intensity)
+# ============================================================================
+
+class Q1GoalkeeperCfgStage1(Q1GoalkeeperCfgContactDR):
+    """Weak Stage 1: minimal backward-lean + hip actuator DR to preserve goalkeeper skill."""
+    class domain_rand(Q1GoalkeeperCfgContactDR.domain_rand):
+        # --- Backward lean reset DR (weak) ---
+        randomize_backward_lean_reset = True
+        root_pitch_noise_deg = 2.0           # ±2° (was 5°)
+        root_pitch_backward_bias = 0.6
+        root_pitch_vel_noise = 0.2           # ±0.2 rad/s (was 0.5)
+        hip_pitch_init_noise = 0.04          # ±0.04 rad (was 0.10)
+        ankle_pitch_init_noise = 0.03        # ±0.03 rad (was 0.08)
+        # --- Hip-pitch actuator DR (weak) ---
+        randomize_hip_pitch_actuator = True
+        hip_pitch_motor_strength_scale = [0.85, 1.15]
+        hip_pitch_kp_scale = [0.85, 1.15]
+        hip_pitch_kd_scale = [0.9, 1.3]
+        hip_pitch_action_delay_steps = 1     # 0-1 step
+        hip_pitch_action_filter_alpha = [0.7, 1.0]
+        hip_pitch_torque_noise_pct = 0.02    # 2%
+        # --- Ball obs DR (weak) ---
+        ball_obs_noise = 0.02               # ±0.02m (was 0.05)
+        ball_obs_dropout_pct = 0.05         # 5% (was 15%)
+        ball_obs_delay_steps = 1            # 0-1 step (was 3)
+        ball_vanish_jitter_steps = 1        # 0-1 step (was 3)
+        # Disabled for now
+        randomize_history_ball_dropout = False
+        randomize_ball_visible_pitch_disturb = False
+
+    # Rewards: unchanged from contact_dr (no extra penalties)
 
 
 class Q1GoalkeeperCfgPPO(LeggedRobotCfgPPO):

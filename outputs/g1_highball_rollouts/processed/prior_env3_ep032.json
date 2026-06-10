@@ -1,0 +1,19 @@
+{
+  "category": "stand_reach",
+  "recommendation": "use_as_high_reach_prior",
+  "env_id": 3,
+  "episode_id": 32,
+  "root_z_delta": 0.14540261030197144,
+  "root_vz_max": 1.9145385026931763,
+  "upright_min": 0.5528745651245117,
+  "both_feet_airborne_duration": 0.25999999418854713,
+  "contact_recovered_after_airborne": false,
+  "nearest_body_name": "right_rubber_hand",
+  "nearest_body_min_distance": 0.47653475403785706,
+  "ball_z_at_block": 1.3986181020736694,
+  "root_z_at_block": 0.9288801550865173,
+  "foot_contact_left_at_block": false,
+  "foot_contact_right_at_block": false,
+  "block_time": 0.979999978095293,
+  "root_pitch_max": 0.13038993995199813
+}

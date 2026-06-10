@@ -57,10 +57,12 @@ class HIMPPO:
                  smoothness_lower_bound=0.1,
                  amp=None,
                  amp_normalizer=None,
-                 motion_buffer=None
+                 motion_buffer=None,
+                 amp_coef=0.0
                  ):
 
         self.device = device
+        self.amp_coef = amp_coef
 
         self.desired_kl = desired_kl
         self.schedule = schedule
@@ -175,6 +177,9 @@ class HIMPPO:
         mean_surrogate_loss = 0
         mean_est_loss = 0
         mean_region_loss = 0
+        amp_loss = 0.0
+        expert_loss = 0.0
+        policy_loss = 0.0
 
         generator = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
 
@@ -242,7 +247,7 @@ class HIMPPO:
                 loss += smooth_loss
 
                 # amp loss
-                if self.amp is not None:
+                if self.amp is not None and self.amp_coef > 0.0:
                     # import ipdb; ipdb.set_trace()
 
                     motion_ids = 3 * critic_obs_batch[:,self.actor_critic.num_one_step_obs + 3]

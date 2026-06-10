@@ -203,6 +203,35 @@ class LeggedRobot(BaseTask):
         # self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
         self.projected_gravity[:] = quat_rotate_inverse(self.rigid_body_states[:, self.upper_body_index, 3:7], self.gravity_vec)
         self.base_lin_acc = (self.root_states[:, 7:10] - self.last_root_vel[:, :3]) / self.dt
+
+        # Stage 2: ball-visible pitch disturbance
+        if getattr(self.cfg.domain_rand, 'randomize_ball_visible_pitch_disturb', False):
+            # Detect ball becoming visible (flying transition: 0→1)
+            end_target_local_check = quat_rotate_inverse(self.base_quat, self.ball_states[:,:3] - self.torso_pos)
+            ball_flying = ((end_target_local_check[:,0] > 0.05) & (end_target_local_check[:,0] < 3.4) &
+                           (end_target_local_check[:,1] > -2.0) & (end_target_local_check[:,1] < 2.0) &
+                           (end_target_local_check[:,2] < 1.8))
+            just_became_visible = ball_flying & ~self._ball_was_visible
+            self._ball_was_visible = ball_flying
+            # Reset step counter for newly visible envs
+            self._ball_visible_step[just_became_visible] = 0
+            self._ball_visible_push_active[just_became_visible] = (
+                torch.rand(just_became_visible.sum().item(), device=self.device)
+                < self.cfg.domain_rand.ball_visible_push_prob)
+            # Increment step counter for active envs
+            ball_window = self._ball_visible_step < int(self.cfg.domain_rand.ball_visible_push_duration / self.dt)
+            self._ball_visible_step[ball_flying] += 1
+            # Inject pitch angular velocity disturbance
+            active = ball_flying & ball_window & self._ball_visible_push_active
+            if active.any():
+                p_min = self.cfg.domain_rand.ball_visible_pitch_impulse_min
+                p_max = self.cfg.domain_rand.ball_visible_pitch_impulse_max
+                impulse = torch_rand_float(p_min, p_max, (self.num_envs,), device=self.device)
+                # Apply to root pitch angular velocity (index 10 in root_states)
+                self.root_states[active, 10] += impulse[active]
+                # Optional lateral push
+                push = self.cfg.domain_rand.ball_visible_push_vel
+                self.root_states[active, 7:9] += torch_rand_float(-push, push, (active.sum(), 2), device=self.device)
         
         
         # compute contact related quantities
@@ -325,6 +354,18 @@ class LeggedRobot(BaseTask):
         if getattr(self.cfg.domain_rand, 'randomize_motor_strength', False):
             low, high = self.cfg.domain_rand.motor_strength_range
             self.motor_strength[env_ids] = torch_rand_float(low, high, (len(env_ids), self.num_actions), device=self.device)
+        # Stage 1: hip-pitch-specific actuator DR (overrides global kp/kd/motor for hp joints)
+        if getattr(self.cfg.domain_rand, 'randomize_hip_pitch_actuator', False):
+            for hp_idx in self._hp_indices:
+                # Kp override
+                lo, hi = self.cfg.domain_rand.hip_pitch_kp_scale
+                self.Kp_factors[env_ids, hp_idx] = torch_rand_float(lo, hi, (len(env_ids),), device=self.device)
+                # Kd override
+                lo, hi = self.cfg.domain_rand.hip_pitch_kd_scale
+                self.Kd_factors[env_ids, hp_idx] = torch_rand_float(lo, hi, (len(env_ids),), device=self.device)
+                # Motor strength override
+                lo, hi = self.cfg.domain_rand.hip_pitch_motor_strength_scale
+                self.motor_strength[env_ids, hp_idx] = torch_rand_float(lo, hi, (len(env_ids),), device=self.device)
         if self.cfg.domain_rand.randomize_actuation_offset:
             self.actuation_offset[env_ids] = torch_rand_float(self.cfg.domain_rand.actuation_offset_range[0], self.cfg.domain_rand.actuation_offset_range[1], (len(env_ids), self.num_dof), device=self.device) * self.torque_limits.unsqueeze(0)
             self.actuation_offset[:, self.curriculum_dof_indices] = 0.
@@ -471,6 +512,15 @@ class LeggedRobot(BaseTask):
             current_actor_obs[:, :self.num_ballobs] *= mask
 
         self.obs_buf = torch.cat((self.obs_buf[:, self.num_one_step_obs:self.actor_obs_length], current_actor_obs), dim=-1)
+
+        # Stage 1: history ball frame dropout
+        if getattr(self.cfg.domain_rand, 'randomize_history_ball_dropout', False):
+            h_dropout_pct = self.cfg.domain_rand.history_ball_dropout_pct
+            # In obs_buf shape (N, 10*frames), ball obs is at position [0:3] in each frame
+            for h in range(self.actor_history_length - 1):  # don't drop current frame
+                mask = (torch.rand(self.num_envs, 1, device=self.device) > h_dropout_pct).float()
+                start = h * self.num_one_step_obs
+                self.obs_buf[:, start:start + self.num_ballobs] *= mask
 
         self.privileged_obs_buf = current_obs
         
@@ -728,6 +778,16 @@ class LeggedRobot(BaseTask):
             else:
                 self.dof_pos[env_ids] = self.standpos * torch.ones((len(env_ids), self.num_dof), device=self.device)
 
+        # Stage 1: hip_pitch / ankle_pitch initial position noise
+        if getattr(self.cfg.domain_rand, 'randomize_backward_lean_reset', False):
+            for jidx in self._hp_indices:
+                noise = self.cfg.domain_rand.hip_pitch_init_noise
+                self.dof_pos[env_ids, jidx] += torch_rand_float(-noise, noise, (len(env_ids),), device=self.device)
+            for jidx in self._ap_indices:
+                noise = self.cfg.domain_rand.ankle_pitch_init_noise
+                self.dof_pos[env_ids, jidx] += torch_rand_float(-noise, noise, (len(env_ids),), device=self.device)
+            self.dof_pos[env_ids] = torch.clip(self.dof_pos[env_ids], dof_lower, dof_upper)
+
         self.init_dof_pos[env_ids] = self.dof_pos[env_ids].clone()
 
 
@@ -760,6 +820,28 @@ class LeggedRobot(BaseTask):
             self.root_states[env_ids, 7:13] = torch_rand_float(-0.3, 0.3, (len(env_ids), 6), device=self.device)
         else:
             self.root_states[env_ids, 7:13] = 0.0
+        # Stage 1: backward lean reset DR — root pitch noise with backward bias
+        if getattr(self.cfg.domain_rand, 'randomize_backward_lean_reset', False):
+            pitch_deg = self.cfg.domain_rand.root_pitch_noise_deg
+            pitch_rad_range = pitch_deg * 3.14159 / 180.0
+            bias = self.cfg.domain_rand.root_pitch_backward_bias
+            # Sample pitch: biased toward backward (positive pitch = backward lean)
+            pitch = torch_rand_float(-pitch_rad_range, pitch_rad_range, (len(env_ids),), device=self.device)
+            # bias: flip some samples to the backward side
+            backward_mask = torch.rand(len(env_ids), device=self.device) < bias
+            pitch[backward_mask] = torch.abs(pitch[backward_mask])  # always backward
+            # Convert pitch to quaternion (rotation about Y axis)
+            half_pitch = pitch * 0.5
+            q_w = torch.cos(half_pitch)
+            q_y = torch.sin(half_pitch)
+            # quaternion: w, x, y, z
+            self.root_states[env_ids, 3] = q_w
+            self.root_states[env_ids, 4] = 0.0
+            self.root_states[env_ids, 5] = q_y
+            self.root_states[env_ids, 6] = 0.0
+            # Root pitch angular velocity noise
+            pv = self.cfg.domain_rand.root_pitch_vel_noise
+            self.root_states[env_ids, 10] = torch_rand_float(-pv, pv, (len(env_ids),), device=self.device)
         env_ids_int32 = env_ids.to(dtype=torch.int32)
 
         ball_ids = env_ids
@@ -945,6 +1027,10 @@ class LeggedRobot(BaseTask):
         self.common_step_counter = 0
         self.last_step_counter = 0
         self.extras = {}
+        # Stage 2: ball-visible pitch disturbance state
+        self._ball_visible_step = torch.zeros(self.num_envs, dtype=torch.int32, device=self.device)
+        self._ball_was_visible = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._ball_visible_push_active = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
         self.torques = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
@@ -978,21 +1064,25 @@ class LeggedRobot(BaseTask):
 
         self.end_target = torch.zeros(self.num_envs, 3, dtype = torch.float, device= self.device)
 
-        six = self.num_envs // 6
-        remainder = self.num_envs % 6
-        regions = [
-            torch.zeros(six, dtype=torch.long, device=self.device),
-            torch.ones(six, dtype=torch.long, device=self.device),
-            torch.full((six,), 2, dtype=torch.long, device=self.device),
-            torch.full((six,), 3, dtype=torch.long, device=self.device),
-            torch.full((six,), 4, dtype=torch.long, device=self.device),
-            torch.full((six,), 5, dtype=torch.long, device=self.device),
-        ]
-        if remainder > 0:
-            regions.append(torch.arange(remainder, dtype=torch.long, device=self.device))
+        mode_weights = getattr(self.cfg.env, 'mode_weights', [1, 1, 1, 1, 1, 1])
+        total_w = sum(mode_weights)
+        counts = [max(1, int(self.num_envs * w / total_w)) for w in mode_weights]
+        diff = self.num_envs - sum(counts)
+        for i in range(abs(diff)):
+            counts[i % 6] += 1 if diff > 0 else -1
+        regions = []
+        for m in range(6):
+            regions.append(torch.full((counts[m],), m, dtype=torch.long, device=self.device))
         self.end_regions = torch.cat(regions)
-    
+        pcts = [f"{c/self.num_envs*100:.1f}%" for c in counts]
+        print(f"[MODE_DIST] weights={mode_weights} → counts={counts} → pct={pcts}")
+
         command_dict = class_to_dict(self.cfg.commands)
+
+        print(f"[MODE_SPEC] mode | dir   | height_z(m)   | width_y(m)")
+        for m in range(6):
+            r = command_dict[f"ranges_{m}"]
+            print(f"[MODE_SPEC]   {m}  | {'right' if m%2==0 else 'left '} | [{r['height'][0]:.2f}, {r['height'][1]:.2f}]      | [{r['width'][0]:.2f}, {r['width'][1]:.2f}]")
 
         # Initialize an empty tensor for command ranges
         num_envs = self.num_envs
@@ -1296,6 +1386,9 @@ class LeggedRobot(BaseTask):
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
         self.num_bodies = len(body_names)
         self.num_dof = len(self.dof_names)
+        # Stage 1/2/3: hip_pitch and ankle_pitch joint indices for targeted DR
+        self._hp_indices = [i for i, n in enumerate(self.dof_names) if 'hip_pitch' in n]
+        self._ap_indices = [i for i, n in enumerate(self.dof_names) if 'ankle_pitch' in n]
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
 
         penalized_contact_names = []
@@ -1583,7 +1676,7 @@ class LeggedRobot(BaseTask):
 
         foot_contact_forces_z = self.contact_forces[:, self.contact_feet_indices, 2]
         
-        jump = self.root_states[:,2] > 0.55
+        jump = self.root_states[:,2] > getattr(self.cfg.rewards, 'successland_jump_threshold', 0.55)
         
         self.has_in_air = torch.logical_or(self.has_in_air, jump)
         
@@ -1723,3 +1816,108 @@ class LeggedRobot(BaseTask):
         """Penalize feet being too close together (Q1 goalkeeper)."""
         viol = torch.clamp(self.min_foot_sep - self.foot_sep_y, min=0.0)
         return viol * viol
+
+    # --- Stage 1/2/3: Failure-proxy penalty rewards ---
+
+    def _reward_root_pitch_penalty(self):
+        """Penalize excessive backward root pitch (positive pitch = backward lean)."""
+        thresh = getattr(self.cfg.rewards, 'root_pitch_penalty_threshold', 0.3)
+        excess = torch.clamp(self.pitch - thresh, min=0.0)
+        return excess * excess
+
+    def _reward_pitch_vel_penalty(self):
+        """Penalize high pitch angular velocity."""
+        thresh = getattr(self.cfg.rewards, 'pitch_vel_threshold', 2.0)
+        pitch_vel = torch.abs(self.base_ang_vel[:, 1])  # Y-axis = pitch
+        excess = torch.clamp(pitch_vel - thresh, min=0.0)
+        return excess
+
+    def _reward_hip_pitch_action_penalty(self):
+        """Penalize large hip_pitch actions."""
+        if not self._hp_indices:
+            return torch.zeros(self.num_envs, device=self.device)
+        hp_actions = torch.stack([self.actions[:, i] for i in self._hp_indices], dim=1)
+        return torch.sum(torch.abs(hp_actions), dim=1)
+
+    def _reward_hip_pitch_rate_penalty(self):
+        """Penalize large hip_pitch action rate (difference from last action)."""
+        if not self._hp_indices:
+            return torch.zeros(self.num_envs, device=self.device)
+        hp_curr = torch.stack([self.actions[:, i] for i in self._hp_indices], dim=1)
+        hp_prev = torch.stack([self.last_actions[:, i] for i in self._hp_indices], dim=1)
+        return torch.sum(torch.abs(hp_curr - hp_prev), dim=1)
+
+    def _reward_foot_contact_keep(self):
+        """Bonus for maintaining foot contact after ball is visible."""
+        ball_visible = self._ball_was_visible.float()
+        foot_contact_z = self.contact_forces[:, self.contact_feet_indices, 2]
+        both_feet = ((foot_contact_z[:, 0] > 1.) & (foot_contact_z[:, 1] > 1.)).float()
+        return both_feet * ball_visible
+
+    def _reward_foot_slip_penalty(self):
+        """Penalize foot slip (foot velocity when in contact)."""
+        foot_vel = self.rigid_body_states[:, self.contact_feet_indices, 7:9]  # x,y vel
+        foot_contact_z = self.contact_forces[:, self.contact_feet_indices, 2]
+        in_contact = (foot_contact_z > 1.).float().unsqueeze(-1)
+        slip = torch.norm(foot_vel, dim=-1) * in_contact.squeeze(-1)
+        return torch.sum(slip, dim=1)
+
+    def _reward_upright_penalty(self):
+        """Penalise pelvic tilt toward gravity_threshold.
+
+        upright = -projected_gravity[:,2]  → 1.0=vertical, 0.8=terminate.
+        danger = clamp((threshold - upright) / deadzone, 0, 1).
+        penalty = danger ** 2, masked by ball-visible if configured.
+        """
+        upright = -self.projected_gravity[:, 2]
+        thresh = getattr(self.cfg.rewards, 'upright_threshold', 0.95)
+        deadzone = getattr(self.cfg.rewards, 'upright_deadzone', 0.15)
+        danger = torch.clamp((thresh - upright) / deadzone, 0.0, 1.0)
+        penalty = danger * danger
+
+        if getattr(self.cfg.rewards, 'upright_ball_visible_only', False):
+            end_rel = quat_rotate_inverse(self.base_quat, self.ball_states[:, :3] - self.torso_pos)
+            ball_flying = ((end_rel[:, 0] > 0.05) & (end_rel[:, 0] < 3.4) &
+                           (end_rel[:, 1] > -2.0) & (end_rel[:, 1] < 2.0) &
+                           (end_rel[:, 2] < 1.8) & (self.catchstep > 0))
+            penalty = penalty * ball_flying.float()
+
+        return penalty
+
+    def _get_highball_active_mask(self):
+        """Mask for high-ball modes (2,3) where ball is visible/approaching."""
+        highball = (self.end_regions == 2) | (self.end_regions == 3)
+        end_rel = quat_rotate_inverse(self.base_quat, self.ball_states[:, :3] - self.torso_pos)
+        ball_flying = ((end_rel[:, 0] > 0.05) & (end_rel[:, 0] < 3.4) &
+                       (end_rel[:, 1] > -2.0) & (end_rel[:, 1] < 2.0) &
+                       (end_rel[:, 2] < 1.8) & (self.catchstep > 0))
+        return (highball & ball_flying).float()
+
+    def _reward_highball_jump_height(self):
+        """Reward root_z above threshold for high-ball modes when ball is visible."""
+        mask = self._get_highball_active_mask()
+        if mask.sum() == 0:
+            return torch.zeros(self.num_envs, device=self.device)
+        thresh = getattr(self.cfg.rewards, 'highball_jump_z_threshold', 0.45)
+        rng = getattr(self.cfg.rewards, 'highball_jump_z_range', 0.15)
+        jump = torch.clamp((self.root_states[:, 2] - thresh) / rng, 0.0, 1.0)
+        return jump * mask
+
+    def _reward_highball_upward_velocity(self):
+        """Reward upward root velocity for high-ball modes when ball is visible."""
+        mask = self._get_highball_active_mask()
+        if mask.sum() == 0:
+            return torch.zeros(self.num_envs, device=self.device)
+        up_vel = torch.clamp(self.root_states[:, 9], 0.0, 1.0)  # root_vz
+        return up_vel * mask
+
+    def _reward_highball_upright_penalty(self):
+        """Extra upright penalty for high-ball modes only."""
+        mask = self._get_highball_active_mask()
+        if mask.sum() == 0:
+            return torch.zeros(self.num_envs, device=self.device)
+        upright = -self.projected_gravity[:, 2]
+        thresh = getattr(self.cfg.rewards, 'upright_threshold', 0.95)
+        deadzone = getattr(self.cfg.rewards, 'upright_deadzone', 0.15)
+        danger = torch.clamp((thresh - upright) / deadzone, 0.0, 1.0)
+        return (danger * danger) * mask

@@ -996,22 +996,32 @@ def sanity_policy_dummy(cfg, args):
 # ==============================================================================
 
 def _save_video(frames, output_path, fps=50):
-    """Save list of RGB frames to MP4 video."""
-    try:
-        import cv2
-        if not frames:
-            print("Warning: No frames to save")
-            return
-        h, w = frames[0].shape[:2]
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
-        for frame in frames:
-            # Renderer returns RGB, OpenCV expects BGR
-            writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-        writer.release()
-        print(f"Video saved: {output_path} ({len(frames)} frames)")
-    except ImportError:
-        print("Warning: opencv-python not installed, cannot save video. Frames dropped.")
+    """Save list of RGB frames to H.264 MP4 video via ffmpeg pipe."""
+    import subprocess
+    if not frames:
+        print("Warning: No frames to save")
+        return
+    h, w = frames[0].shape[:2]
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "rawvideo",
+        "-vcodec", "rawvideo",
+        "-s", f"{w}x{h}",
+        "-pix_fmt", "rgb24",
+        "-r", str(fps),
+        "-i", "-",
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "23",
+        "-pix_fmt", "yuv420p",
+        output_path,
+    ]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    for frame in frames:
+        proc.stdin.write(frame.tobytes())
+    proc.stdin.close()
+    proc.wait()
+    print(f"Video saved: {output_path} ({len(frames)} frames)")
 
 
 # ==============================================================================

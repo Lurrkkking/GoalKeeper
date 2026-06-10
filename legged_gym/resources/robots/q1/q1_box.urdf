@@ -9,7 +9,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/pelvis.STL"/>
+        <mesh filename="meshes/pelvis.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
@@ -31,7 +31,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_hip_pitch_link.STL"/>
+        <mesh filename="meshes/left_hip_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.866666666666667 0.866666666666667 0.890196078431372 1"/>
@@ -60,7 +60,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_hip_roll_link.STL"/>
+        <mesh filename="meshes/left_hip_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -89,7 +89,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_hip_yaw_link.STL"/>
+        <mesh filename="meshes/left_hip_yaw_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -118,7 +118,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_knee_link.STL"/>
+        <mesh filename="meshes/left_knee_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.698039215686274 0.698039215686274 0.698039215686274 1"/>
@@ -147,16 +147,16 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/left_ankle_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="-0.005 0 -0.007" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.04 0.05 0.02"/>
+        <box size="0.00 0.00 0.00"/>
       </geometry>
     </collision>
   </link>
@@ -176,16 +176,34 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_ankle_roll_link.STL"/>
+        <mesh filename="meshes/left_ankle_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.04 0.025 -0.032" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_ankle_roll_link.STL"/>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.04 -0.025 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.09 0.02 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.09 -0.02 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
       </geometry>
     </collision>
   </link>
@@ -205,7 +223,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_hip_pitch_link.STL"/>
+        <mesh filename="meshes/right_hip_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.866666666666667 0.866666666666667 0.890196078431372 1"/>
@@ -234,7 +252,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_hip_roll_link.STL"/>
+        <mesh filename="meshes/right_hip_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -263,7 +281,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_hip_yaw_link.STL"/>
+        <mesh filename="meshes/right_hip_yaw_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -292,7 +310,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_knee_link.STL"/>
+        <mesh filename="meshes/right_knee_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.866666666666667 0.866666666666667 0.890196078431372 1"/>
@@ -321,16 +339,16 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_ankle_pitch_link.STL"/>
+        <mesh filename="meshes/right_ankle_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="-0.005 0 -0.007" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.04 0.05 0.02"/>
+        <box size="0.00 0.00 0.00"/>
       </geometry>
     </collision>
   </link>
@@ -350,16 +368,34 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_ankle_roll_link.STL"/>
+        <mesh filename="meshes/right_ankle_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.04 0.025 -0.032" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_ankle_roll_link.STL"/>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.04 -0.025 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.09 0.02 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.09 -0.02 -0.032" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.008"/>
       </geometry>
     </collision>
   </link>
@@ -379,7 +415,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/waist_roll_link.STL"/>
+        <mesh filename="meshes/waist_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.890196078431372 0.890196078431372 0.913725490196078 1"/>
@@ -408,7 +444,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/torso_link.STL"/>
+        <mesh filename="meshes/torso_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.866666666666667 0.866666666666667 0.890196078431372 1"/>
@@ -417,7 +453,7 @@
     <collision>
       <origin xyz="-0.01 0 0.12" rpy="0 0 0"/>
       <geometry>
-        <box size="0.16 0.18 0.20"/>
+        <box size="0.16 0.14 0.20"/>
       </geometry>
     </collision>
   </link>
@@ -437,7 +473,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_shoulder_pitch_link.STL"/>
+        <mesh filename="meshes/left_shoulder_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
@@ -446,7 +482,7 @@
     <collision>
       <origin xyz="0 0.025 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.06 0.06 0.06"/>
+        <box size="0.0 0.0 0.0"/>
       </geometry>
     </collision>
   </link>
@@ -466,16 +502,16 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_shoulder_roll_link.STL"/>
+        <mesh filename="meshes/left_shoulder_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.04" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
       <geometry>
-        <box size="0.07 0.07 0.09"/>
+        <box size="0.07 0.05 0.09"/>
       </geometry>
     </collision>
   </link>
@@ -495,7 +531,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/left_shoulder_yaw_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
@@ -524,7 +560,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/left_elbow_link.STL"/>
+        <mesh filename="meshes/left_elbow_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -553,7 +589,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_shoulder_pitch_link.STL"/>
+        <mesh filename="meshes/right_shoulder_pitch_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
@@ -562,7 +598,7 @@
     <collision>
       <origin xyz="0 -0.025 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.06 0.06 0.06"/>
+        <box size="0.0 0.0 0.0"/>
       </geometry>
     </collision>
   </link>
@@ -582,16 +618,16 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_shoulder_roll_link.STL"/>
+        <mesh filename="meshes/right_shoulder_roll_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.698039215686274 0.698039215686274 0.698039215686274 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.04" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
       <geometry>
-        <box size="0.07 0.07 0.09"/>
+        <box size="0.07 0.05 0.09"/>
       </geometry>
     </collision>
   </link>
@@ -611,7 +647,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_shoulder_yaw_link.STL"/>
+        <mesh filename="meshes/right_shoulder_yaw_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
@@ -640,7 +676,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/right_elbow_link.STL"/>
+        <mesh filename="meshes/right_elbow_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.968627450980392 0.968627450980392 0.968627450980392 1"/>
@@ -669,7 +705,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="/root/autodl-tmp/assets/robots/Q1-V2.0-URDF-0526/meshes/head_link.STL"/>
+        <mesh filename="meshes/head_link.STL"/>
       </geometry>
       <material name="">
         <color rgba="1 1 1 0.35"/>

@@ -34,6 +34,7 @@ from .g1.g1_29_config import G129Cfg, G129CfgPPO
 from .q1.q1_goalkeeper_config import (
     Q1GoalkeeperCfg, Q1GoalkeeperCfgPPO, Q1GoalkeeperCfgHard,
     Q1GoalkeeperCfgMediumDR, Q1GoalkeeperCfgContactDR, Q1GoalkeeperCfgFinetuneDR,
+    Q1GoalkeeperCfgStage1,
 )
 
 import os
@@ -46,3 +47,4 @@ task_registry.register( "q1_hard", LeggedRobot, Q1GoalkeeperCfgHard(), Q1Goalkee
 task_registry.register( "q1_medium", LeggedRobot, Q1GoalkeeperCfgMediumDR(), Q1GoalkeeperCfgPPO() )
 task_registry.register( "q1_contact", LeggedRobot, Q1GoalkeeperCfgContactDR(), Q1GoalkeeperCfgPPO() )
 task_registry.register( "q1_finetune", LeggedRobot, Q1GoalkeeperCfgFinetuneDR(), Q1GoalkeeperCfgPPO() )
+task_registry.register( "q1_stage1", LeggedRobot, Q1GoalkeeperCfgStage1(), Q1GoalkeeperCfgPPO() )

@@ -87,7 +87,7 @@ class HIMOnPolicyRunner:
 
 
         alg_class = eval(self.cfg["algorithm_class_name"]) # HIMPPO
-        self.alg: HIMPPO = alg_class(actor_critic,  amp=amp, amp_normalizer=amp_normalizer,motion_buffer=self.env.motions, device=self.device, **self.alg_cfg)
+        self.alg: HIMPPO = alg_class(actor_critic,  amp=amp, amp_normalizer=amp_normalizer,motion_buffer=self.env.motions, device=self.device, amp_coef=self.amp_coef, **self.alg_cfg)
         self.num_steps_per_env = self.cfg["num_steps_per_env"]
         self.save_interval = self.cfg["save_interval"]
 
@@ -158,18 +158,24 @@ class HIMOnPolicyRunner:
                     termination_ids = termination_ids.to(self.device)
                     termination_privileged_obs = termination_privileged_obs.to(self.device)
 
-                    amp_state = self.env.get_amp_observations().to(self.device)
-                    amp_state_ = torch.cat([old_amp_state, amp_state], dim=1).to(self.device)
+                    if self.amp_coef > 0.0:
+                        amp_state = self.env.get_amp_observations().to(self.device)
+                        amp_state_ = torch.cat([old_amp_state, amp_state], dim=1).to(self.device)
+                    else:
+                        amp_state_ = torch.zeros(self.env.num_envs, self.env.num_amp_obs, device=self.device)
                     self.alg.process_amp_state(amp_state_)
 
                     num_envs = obs.shape[0]
                     amp_reward = torch.zeros(num_envs, device=obs.device)
 
-                    motion_ids = 3 * critic_obs[:,self.alg.actor_critic.num_one_step_obs + 3]
+                    if self.amp_coef > 0.0:
+                        motion_ids = 3 * critic_obs[:,self.alg.actor_critic.num_one_step_obs + 3]
                     for motion_key, motion_val in zip(
                         ["lefthand", "righthand", "leftjump", "rightjump", "leftstep", "rightstep"],
                         [0, 1, 2, 3, 4, 5]
                     ):
+                        if self.amp_coef <= 0.0:
+                            break
                         mask = motion_ids == motion_val
                         if mask.any():
                             rew = self.alg.amp[motion_key].predict_reward(
