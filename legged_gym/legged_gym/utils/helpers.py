@@ -206,6 +206,59 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
 
     return env_cfg, cfg_train
 
+def apply_reward_yaml(env_cfg, yaml_path):
+    """Override env_cfg.rewards fields from a YAML file."""
+    import yaml
+    import os
+
+    # Resolve path: try relative to cwd, then relative to LEGGED_GYM_ROOT_DIR
+    if not os.path.isabs(yaml_path):
+        candidates = [
+            os.path.normpath(os.path.join(os.getcwd(), yaml_path)),
+            os.path.normpath(os.path.join(LEGGED_GYM_ROOT_DIR, yaml_path)),
+            os.path.normpath(os.path.join(LEGGED_GYM_ROOT_DIR, "..", yaml_path)),  # project root
+        ]
+        found = None
+        for p in candidates:
+            if os.path.isfile(p):
+                found = p
+                break
+        if found is None:
+            raise FileNotFoundError(
+                f"reward_yaml not found: {yaml_path}. Tried: {candidates}")
+        yaml_path = found
+
+    with open(yaml_path, "r") as f:
+        data = yaml.safe_load(f)
+
+    if "rewards" not in data:
+        raise KeyError("reward yaml must contain top-level key: rewards")
+
+    rew = data["rewards"]
+    print(f"[reward_yaml] loaded: {yaml_path}")
+
+    if "reward_scales" in rew:
+        for k, v in rew["reward_scales"].items():
+            if not hasattr(env_cfg.rewards.scales, k):
+                raise KeyError(f"Unknown reward scale '{k}' — not found in env_cfg.rewards.scales")
+            old = getattr(env_cfg.rewards.scales, k)
+            setattr(env_cfg.rewards.scales, k, v)
+            if old != v:
+                print(f"[reward_yaml] reward_scales.{k}: {old} -> {v}")
+
+    for k, v in rew.items():
+        if k == "reward_scales":
+            continue
+        if not hasattr(env_cfg.rewards, k):
+            raise KeyError(f"Unknown rewards field '{k}' — not found in env_cfg.rewards")
+        old = getattr(env_cfg.rewards, k)
+        setattr(env_cfg.rewards, k, v)
+        if old != v:
+            print(f"[reward_yaml] rewards.{k}: {old} -> {v}")
+
+    return env_cfg
+
+
 def get_args():
     custom_parameters = [
         {"name": "--task", "type": str, "default": "29", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
@@ -222,6 +275,7 @@ def get_args():
         {"name": "--num_envs", "type": int, "help": "Number of environments to create. Overrides config file if provided."},
         {"name": "--seed", "type": int, "help": "Random seed. Overrides config file if provided."},
         {"name": "--max_iterations", "type": int, "help": "Maximum number of training iterations. Overrides config file if provided."},
+        {"name": "--reward_yaml", "type": str, "default": None, "help": "Optional reward YAML to override env_cfg.rewards fields."},
     ]
     # parse arguments
     args = gymutil.parse_arguments(

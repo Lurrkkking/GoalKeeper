@@ -1,0 +1,13 @@
+metric,value
+total_trials,1620
+overall_save_rate,3.6%
+normal_zone_save_rate_0_03,10.7%
+hard_zone_save_rate_06_09,0.1%
+extreme_zone_save_rate_12,0.0%
+goals,1561
+falls,0
+avg_min_ball_body_dist_m,999.000
+avg_reaction_time_s,0.665
+failure_mode_insufficient_reach,1191
+failure_mode_no_reaction,370
+failure_mode_save,59

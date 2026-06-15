@@ -7,12 +7,12 @@
 # IsaacGym-aligned physical baseline:
 # ball mass=0.1 kg, radius=0.1 m, friction≈0.5
 # body friction=1.0, condim=3
-xml_path: "q1_abi_B6_g1_joint.xml"  # B6: armature=0.004, damping=0.52, frictionloss=0.65 + G1-style collision
-policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper.onnx"
+xml_path: "../models/q1.xml"
+policy_path: "../weights/q1_7700.onnx"
 
 # --- Simulation ---
-simulation_dt: 0.002       # 500 Hz MuJoCo physics (more stable than 200Hz for body-ground contact)
-control_decimation: 10      # policy runs at 50 Hz → policy_dt = 0.002 * 10 = 0.02s (matches IsaacGym training)
+simulation_dt: 0.005       # 200 Hz (aligned with IsaacGym training: base legged_robot_config.py sim.dt=0.005)
+control_decimation: 4       # policy runs at 50 Hz → policy_dt = 0.005 * 4 = 0.02s
 simulation_duration: 3.0    # seconds (150 control steps at 50Hz)
 
 # --- Observation dimensions ---

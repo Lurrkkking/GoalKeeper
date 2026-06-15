@@ -5,8 +5,8 @@
 
 # --- MuJoCo model ---
 # G1 29-DOF goalkeeper XML with ball, collision geoms, ground
-xml_path: "g1_goalkeeper_mujoco.xml"
-policy_path: "../legged_gym/logs/g1/exported/policies/goalkeeper_official.onnx"
+xml_path: "../models/g1.xml"
+policy_path: "../weights/g1_official.onnx"
 
 # --- Simulation ---
 simulation_dt: 0.005        # 200 Hz MuJoCo physics (matches IsaacGym training sim_dt)

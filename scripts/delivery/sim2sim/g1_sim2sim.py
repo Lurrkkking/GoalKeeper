@@ -297,10 +297,10 @@ SHOT_MODES = {
 INIT_Y_RANGE = [-1.8, 1.8]   # ranges_1.maxw[0] to ranges_0.maxw[1]
 INIT_Z_RANGE = [0.1, 1.8]    # ranges_4.maxh[0] to ranges_2.maxh[1]
 
-def compute_shot_from_mode(mode, g=9.81, t_flight=None):
+def compute_shot_from_mode(mode, g=9.81, t_flight=None, spawn_distance=None):
     """Compute shot_init_pos and shot_init_vel matching training assign_ball_states.
 
-    ball_start xy: x∈[3,5], y∈INIT_Y_RANGE, z∈INIT_Z_RANGE
+    ball_start xy: x∈[3,5] or [spawn_distance-2, spawn_distance], y∈INIT_Y_RANGE, z∈INIT_Z_RANGE
     ball_end xy:   x∈[-0.6,-0.1], yz from SHOT_MODES[mode]
     t_flight:      [0.4, 1.0]
     """
@@ -311,7 +311,10 @@ def compute_shot_from_mode(mode, g=9.81, t_flight=None):
     h0, h1 = r["height"]
 
     # Ball start: wider ranges (training init_ranges)
-    start_x = np.random.rand() * 2.0 + 3.0                # [3, 5]
+    if spawn_distance is not None:
+        start_x = float(spawn_distance)                      # fixed distance
+    else:
+        start_x = np.random.rand() * 2.0 + 3.0                # [3, 5]
     start_y = np.random.rand() * (INIT_Y_RANGE[1] - INIT_Y_RANGE[0]) + INIT_Y_RANGE[0]
     start_z = np.random.rand() * (INIT_Z_RANGE[1] - INIT_Z_RANGE[0]) + INIT_Z_RANGE[0]
 
@@ -349,7 +352,8 @@ def reset_robot_and_ball(model, data, index_map, cfg, shot_mode=-1):
     ball_qvel_start = model.jnt_dofadr[model.joint("ball_free").id]
 
     if shot_mode >= 0:
-        shot_pos, shot_vel = compute_shot_from_mode(shot_mode)
+        shot_pos, shot_vel = compute_shot_from_mode(shot_mode,
+                            spawn_distance=cfg.get("ball_spawn_distance", None))
     else:
         shot_pos = np.array(cfg.get("shot_init_pos", [4.0, 0.0, 0.8]))
         shot_vel = np.array(cfg.get("shot_init_vel", [-6.14, 0.0, 3.43]))
@@ -666,6 +670,38 @@ def print_qacc_debug_window(records, trigger_index):
 
 
 # ==============================================================================
+# Ball-state activation wrapper
+# ==============================================================================
+
+def check_ball_launch_trigger(ball_pos_history, ball_init_pos, policy_dt, args):
+    """Detect ball launch from position-history velocity estimation."""
+    speed_thresh = float(getattr(args, "trigger_speed_threshold", 0.3))
+    toward_thresh = float(getattr(args, "trigger_toward_speed_threshold", 0.2))
+    disp_thresh = float(getattr(args, "trigger_displacement_threshold", 0.02))
+
+    if len(ball_pos_history) < 5:
+        return False, np.zeros(3), 0.0, 0.0, 0.0
+
+    ball_vel_est = (ball_pos_history[-1] - ball_pos_history[-5]) / (5.0 * policy_dt)
+    speed = float(np.linalg.norm(ball_vel_est))
+
+    goal_center = np.array([0.0, 0.0, 0.8])
+    to_goal = goal_center - ball_pos_history[-1]
+    to_goal_norm = float(np.linalg.norm(to_goal))
+    goal_dir = to_goal / to_goal_norm if to_goal_norm > 1e-6 else np.zeros(3)
+    v_toward_goal = float(np.dot(ball_vel_est, goal_dir))
+
+    displacement = float(np.linalg.norm(ball_pos_history[-1] - ball_init_pos))
+
+    triggered = (
+        speed > speed_thresh
+        and v_toward_goal > toward_thresh
+        and displacement > disp_thresh
+    )
+    return triggered, ball_vel_est, speed, v_toward_goal, displacement
+
+
+# ==============================================================================
 # Main simulation loop
 # ==============================================================================
 
@@ -686,7 +722,8 @@ def run_mujoco(cfg, args):
     # Reset
     shot_mode = getattr(args, "shot_mode", -1)
     if shot_mode >= 0:
-        sp, sv = compute_shot_from_mode(shot_mode)
+        sp, sv = compute_shot_from_mode(shot_mode,
+                        spawn_distance=getattr(args, "ball_spawn_distance", None))
         print(f"  shot_mode={shot_mode}: pos={sp} vel={sv}")
     reset_robot_and_ball(model, data, index_map, cfg, shot_mode=shot_mode)
 
@@ -705,11 +742,43 @@ def run_mujoco(cfg, args):
         debug_qacc_threshold = cfg.get("max_abs_qacc", 50000.0)
     debug_qacc_threshold = float(debug_qacc_threshold)
 
-    # Ball launch flag: if --no-ball-launch, zero ball velocity
+    # --- Ball-state activation wrapper ---
+    activation_mode = str(getattr(args, "activation_mode", "ball_state_trigger"))
+    gk_visible_mode = str(getattr(args, "gk_visible_after_trigger", "train_timing"))
+    debounce_steps = int(getattr(args, "trigger_debounce_steps", 2))
+
+    STATE_WAIT, STATE_ACTIVE, STATE_RECOVER = "WAIT", "ACTIVE", "RECOVER"
+    state = STATE_ACTIVE if activation_mode == "always_on" else STATE_WAIT
+    ball_pos_history = []
+    ball_init_pos = None
+    debounce_counter = 0
+    gk_local_step = 0
+    trigger_info = None
+    ball_qvel_start = model.jnt_dofadr[model.joint("ball_free").id]
+
+    if activation_mode == "always_on":
+        print("  [WRAPPER] mode=always_on — policy active from t=0")
+    else:
+        print(f"  [WRAPPER] mode={activation_mode}, visible={gk_visible_mode}, "
+              f"speed_thresh={getattr(args, 'trigger_speed_threshold', 0.3):.1f}, "
+              f"debounce={debounce_steps}")
+
     if getattr(args, "no_ball_launch", False):
-        ball_qvel_start = model.jnt_dofadr[model.joint("ball_free").id]
+        data.qvel[ball_qvel_start:ball_qvel_start + 6] = 0.0
+        state = STATE_ACTIVE
+        mujoco.mj_forward(model, data)
+
+    ball_launch_delay = float(getattr(args, "ball_launch_delay", 0.0))
+    ball_launch_delay_steps = int(ball_launch_delay / policy_dt) if ball_launch_delay > 0 else 0
+    ball_qpos_start = model.jnt_qposadr[model.joint("ball_free").id]
+    saved_ball_qpos = None
+    saved_ball_qvel = None
+    if ball_launch_delay > 0:
+        saved_ball_qpos = data.qpos[ball_qpos_start:ball_qpos_start + 7].copy()
+        saved_ball_qvel = data.qvel[ball_qvel_start:ball_qvel_start + 6].copy()
         data.qvel[ball_qvel_start:ball_qvel_start + 6] = 0.0
         mujoco.mj_forward(model, data)
+        print(f"  Ball launch delay: {ball_launch_delay}s ({ball_launch_delay_steps} steps), ball frozen")
 
     # Video recording setup
     renderer = None
@@ -721,8 +790,8 @@ def run_mujoco(cfg, args):
         gl_context.make_current()
         renderer = Renderer(model, height=height, width=width)
         # Camera: side view showing robot (x≈0) and ball start (x≈4)
-        cam_pos = np.array([2.0, -4.0, 1.5])
-        cam_lookat = np.array([2.0, 0.0, 0.5])
+        cam_pos = np.array([3.0, -5.0, 1.5])
+        cam_lookat = np.array([3.0, 0.0, 0.5])
         cam_forward = cam_lookat - cam_pos
         cam_forward = cam_forward / np.linalg.norm(cam_forward)
         renderer.scene.camera[0].pos[:] = cam_pos
@@ -767,150 +836,222 @@ def run_mujoco(cfg, args):
     num_control_steps = int(cfg.get("simulation_duration", 3.0) / policy_dt)
     t0 = time.time()
 
+    # Wrapper diagnostics
+    first_nonzero_ball_feature_local_step = None
+    policy_action_max_after_trigger = 0.0
+    trigger_control_step = -1
+
     try:
         for control_step in range(num_control_steps):
-            # (A) Build observation from CURRENT state
-            robot_state = get_robot_state(model, data, index_map, cfg)
-            ball_pos_w, ball_vel_w = get_ball_state(model, data, index_map, cfg)
-            ball_feature = compute_ball_feature(
-                ball_pos_w,
-                robot_state["torso_pos"],
-                robot_state["base_quat"],
-                cfg,
-                ball_obs_state,
-            )
+            # ============================================
+            # STATE: WAIT — PD hold, monitor ball for launch
+            # ============================================
+            if state == STATE_WAIT:
+                if ball_launch_delay > 0 and control_step == ball_launch_delay_steps:
+                    data.qpos[ball_qpos_start:ball_qpos_start + 7] = saved_ball_qpos
+                    data.qvel[ball_qvel_start:ball_qvel_start + 6] = saved_ball_qvel
+                    ball_init_pos = None
+                    ball_pos_history = []
+                    debounce_counter = 0
+                    print(f"  [BALL_UNFREEZE] t={control_step * policy_dt:.2f}s — ball launched")
 
-            # Ablation D: override ball_feature with fixed value
-            if ablation == "D_fixed_ball" and fixed_ball_feat is not None:
-                ball_feature = fixed_ball_feat.copy()
-            # Task 3B: zero ball obs
-            if getattr(args, "zero_ball_obs", False):
-                ball_feature = np.zeros(3, dtype=np.float32)
-            # Ball visibility masking handled by compute_ball_feature via
-            # catchstep/startstep/vanish_step (matches training legged_robot.py).
+                ball_body_id = index_map["ball_body_id"]
+                ball_pos = data.xpos[ball_body_id].copy()
+                if ball_init_pos is None:
+                    ball_init_pos = ball_pos.copy()
+                ball_pos_history.append(ball_pos)
+                if len(ball_pos_history) > 12:
+                    ball_pos_history.pop(0)
 
-            single_obs = build_single_obs(robot_state, ball_feature, last_action, cfg)
+                triggered, vel_est, speed, v_tg, disp = check_ball_launch_trigger(
+                    ball_pos_history, ball_init_pos, policy_dt, args)
 
-            obs = update_history_and_get_obs(history, single_obs, cfg)
-            obs = np.clip(obs, -cfg["clip_observations"], cfg["clip_observations"])
+                if triggered:
+                    debounce_counter += 1
+                else:
+                    debounce_counter = 0
 
-            if not np.isfinite(obs).all():
-                stop_reason = "obs_non_finite"
-                break
+                if debounce_counter >= debounce_steps:
+                    history = create_history_buffer(cfg)
+                    ball_obs_state = create_ball_obs_state(cfg)
+                    last_action = np.zeros(cfg["num_actions"], dtype=np.float32)
+                    gk_local_step = 0
+                    trigger_control_step = control_step
 
-            # (B) Policy inference (skip for ablation C)
-            if ablation == "C_zero_action" or debug_zero_action:
-                raw_action = np.zeros(cfg["num_actions"], dtype=np.float32)
-            else:
-                raw_action = policy_infer(policy, obs.reshape(1, -1))[0]  # shape (num_actions,)
-                raw_action = np.clip(raw_action, -cfg["clip_actions"], cfg["clip_actions"])
+                    if gk_visible_mode == "immediate":
+                        ball_obs_state["catchstep"] = ball_obs_state["startstep"] - 1
 
-            if not np.isfinite(raw_action).all():
-                stop_reason = "action_non_finite"
-                break
+                    t_trigger = control_step * policy_dt
+                    print(f"\n[GK_TRIGGER] at t={t_trigger:.2f}s (step {control_step})")
+                    print(f"  ball_pos=[{ball_pos[0]:.3f},{ball_pos[1]:.3f},{ball_pos[2]:.3f}]")
+                    print(f"  ball_vel_est=[{vel_est[0]:.3f},{vel_est[1]:.3f},{vel_est[2]:.3f}]")
+                    print(f"  speed={speed:.3f} m/s, v_toward_goal={v_tg:.3f} m/s, displacement={disp:.4f} m")
+                    print(f"  debounce={debounce_counter}/{debounce_steps}")
+                    print(f"  visible_mode={gk_visible_mode}, catchstep={ball_obs_state['catchstep']}")
+                    state = STATE_ACTIVE
 
-            policy_target_dof_pos = action_to_target_dof_pos(raw_action, cfg)
-            catchstep_override_active = debug_apply_isaac_catchstep and (ball_obs_state["catchstep"] > ball_obs_state["control_startstep"])
-            if debug_zero_action or debug_policy_no_apply or catchstep_override_active:
-                target_dof_pos = init_dof_pos.copy()
-            else:
-                target_dof_pos = policy_target_dof_pos
-            last_action = raw_action.copy()
-            ball_visible = bool(np.linalg.norm(ball_feature) > 1e-6)
-
-            # (C) Apply action for decimation physics steps
-            for d in range(decimation):
-                # PD control
-                rs = get_robot_state(model, data, index_map, cfg)
-                tau = pd_control(target_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
-                for i, act_id in enumerate(index_map["actuator_ids"]):
-                    data.ctrl[act_id] = tau[i]
-
-                # Step physics
-                mujoco.mj_step(model, data)
-                physics_step_global += 1
-
-                if viewer is not None:
-                    viewer.sync()
-
-                root_positions.append(data.xpos[index_map["imu_body_id"]].copy())
-
-                # Safety and detailed qacc diagnostics
-                qacc = np.abs(data.qacc)
-                qacc_max = float(np.max(qacc))
-                if debug_qacc_log:
-                    rec = make_qacc_debug_record(
-                        model, data, index_map, cfg, control_step, physics_step_global,
-                        raw_action, target_dof_pos, rs, tau, ball_feature, ball_visible,
-                        catchstep_override_active,
-                    )
-                    qacc_debug_records.append(rec)
-                    if qacc_trigger_index is None and qacc_max > debug_qacc_threshold:
-                        qacc_trigger_index = len(qacc_debug_records) - 1
-                        qacc_post_trigger_remaining = 10
-                    elif qacc_post_trigger_remaining > 0:
-                        qacc_post_trigger_remaining -= 1
-
-                if np.any(qacc > cfg.get("max_abs_qacc", 50000.0)):
-                    stop_reason = f"qacc_violation(max={qacc.max():.0f})"
-                    if not debug_qacc_log or qacc_post_trigger_remaining <= 0:
+                if state == STATE_WAIT:
+                    for d in range(decimation):
+                        rs = get_robot_state(model, data, index_map, cfg)
+                        tau = pd_control(init_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
+                        for i, act_id in enumerate(index_map["actuator_ids"]):
+                            data.ctrl[act_id] = tau[i]
+                        mujoco.mj_step(model, data)
+                        # Re-freeze ball during launch delay (gravity would pull it down)
+                        if ball_launch_delay > 0 and control_step < ball_launch_delay_steps:
+                            data.qpos[ball_qpos_start:ball_qpos_start + 7] = saved_ball_qpos
+                            data.qvel[ball_qvel_start:ball_qvel_start + 6] = 0.0
+                        physics_step_global += 1
+                        if viewer is not None:
+                            viewer.sync()
+                        root_positions.append(data.xpos[index_map["imu_body_id"]].copy())
+                    if renderer is not None:
+                        renderer.update_scene(data)
+                        frames.append(renderer.render())
+                    if control_step % 20 == 0:
+                        t = control_step * policy_dt
+                        dbg = f"debounce={debounce_counter}/{debounce_steps}" if triggered else "idle"
+                        print(f"  t={t:.2f}s [WAIT {dbg}] | ball_pos=[{ball_pos[0]:.2f},{ball_pos[1]:.2f},{ball_pos[2]:.2f}] "
+                              f"speed={speed:.2f} v_tg={v_tg:.2f} disp={disp:.3f}")
+                    root_z = data.xpos[index_map["imu_body_id"]][2]
+                    if root_z < 0.2 or root_z > 3.0:
+                        stop_reason = f"root_height_violation(z={root_z:.3f})"
                         break
+                    continue
 
-            advance_ball_obs_state(ball_obs_state)
+            # ============================================
+            # STATE: ACTIVE — GK policy loop
+            # ============================================
+            if state == STATE_ACTIVE:
+                gk_local_step += 1
 
-            # Render ONE frame per control step (policy rate = video_fps)
-            if renderer is not None:
-                renderer.update_scene(data)
-                pixels = renderer.render()
-                frames.append(pixels)
+                robot_state = get_robot_state(model, data, index_map, cfg)
+                ball_pos_w, ball_vel_w = get_ball_state(model, data, index_map, cfg)
+                ball_feature = compute_ball_feature(
+                    ball_pos_w, robot_state["torso_pos"], robot_state["base_quat"],
+                    cfg, ball_obs_state,
+                )
 
-            if stop_reason != "timeout" and (not debug_qacc_log or qacc_post_trigger_remaining <= 0):
-                break
+                if ablation == "D_fixed_ball" and fixed_ball_feat is not None:
+                    ball_feature = fixed_ball_feat.copy()
+                if getattr(args, "zero_ball_obs", False):
+                    ball_feature = np.zeros(3, dtype=np.float32)
 
-            # Logging every 20 control steps
-            if control_step % 20 == 0:
-                t = control_step * policy_dt
-                rs = get_robot_state(model, data, index_map, cfg)
-                bp, bv = get_ball_state(model, data, index_map, cfg)
-                bf_obs = single_obs[0:3]
-                grav = rs["projected_gravity"]
-                tau_abs = np.abs(tau)
-                tau_sat_ratio = (tau_abs >= np.array(cfg["tau_limit"]) * 0.95).mean()
-                top5_act = np.argsort(-np.abs(raw_action))[:5]
-                top5_tau = np.argsort(-tau_abs)[:5]
-                top5_act_str = ",".join([f"{cfg['joint_names'][j].split('_')[-1]}:{raw_action[j]:.2f}" for j in top5_act])
-                top5_tau_str = ",".join([f"{cfg['joint_names'][j].split('_')[-1]}:{tau[j]:.1f}" for j in top5_tau])
+                if first_nonzero_ball_feature_local_step is None and np.linalg.norm(ball_feature) > 1e-6:
+                    first_nonzero_ball_feature_local_step = gk_local_step
 
-                # Dynamic contact logger
-                ncon = data.ncon
-                contact_forces = np.zeros((ncon, 6))
-                contact_info = []
-                for ci in range(ncon):
-                    mujoco.mj_contactForce(model, data, ci, contact_forces[ci])
-                    g1 = data.contact[ci].geom1
-                    g2 = data.contact[ci].geom2
-                    b1 = model.body(model.geom_bodyid[g1]).name if g1 < model.ngeom else 'world'
-                    b2 = model.body(model.geom_bodyid[g2]).name if g2 < model.ngeom else 'world'
-                    fn = np.linalg.norm(contact_forces[ci, :3])
-                    contact_info.append((fn, b1, b2, data.contact[ci].dist))
-                contact_info.sort(key=lambda x: -x[0])
-                top_contacts = contact_info[:5]
-                top_contact_str = " | ".join([f"{b1}-{b2}:{fn:.0f}N d={dist:.3f}" for fn, b1, b2, dist in top_contacts])
+                single_obs = build_single_obs(robot_state, ball_feature, last_action, cfg)
+                obs = update_history_and_get_obs(history, single_obs, cfg)
+                obs = np.clip(obs, -cfg["clip_observations"], cfg["clip_observations"])
 
-                # Compute roll/pitch from projected gravity
-                roll = np.arctan2(grav[1], -grav[2]) if abs(grav[2]) > 0.1 else 0.0
-                pitch = np.arctan2(-grav[0], -grav[2]) if abs(grav[2]) > 0.1 else 0.0
-                qacc_max = np.abs(data.qacc).max()
+                if not np.isfinite(obs).all():
+                    stop_reason = "obs_non_finite"
+                    break
 
-                print(f"  t={t:.2f}s | z={rs['base_pos'][2]:.3f} | roll={np.rad2deg(roll):.1f}° pitch={np.rad2deg(pitch):.1f}° | qacc={qacc_max:.0f} | ncon={ncon}")
-                print(f"    ball_feat=[{bf_obs[0]:.3f},{bf_obs[1]:.3f},{bf_obs[2]:.3f}] | tau mean|max|sat%: {tau_abs.mean():.1f}|{tau_abs.max():.1f}|{tau_sat_ratio*100:.0f}%")
-                print(f"    contact top5: {top_contact_str}")
+                if ablation == "C_zero_action" or debug_zero_action:
+                    raw_action = np.zeros(cfg["num_actions"], dtype=np.float32)
+                else:
+                    raw_action = policy_infer(policy, obs.reshape(1, -1))[0]
+                    raw_action = np.clip(raw_action, -cfg["clip_actions"], cfg["clip_actions"])
 
-            # Safety: root height
-            root_z = data.xpos[index_map["imu_body_id"]][2]
-            if root_z < 0.2 or root_z > 3.0:
-                stop_reason = f"root_height_violation(z={root_z:.3f})"
-                break
+                if not np.isfinite(raw_action).all():
+                    stop_reason = "action_non_finite"
+                    break
+
+                policy_target_dof_pos = action_to_target_dof_pos(raw_action, cfg)
+                catchstep_override_active = debug_apply_isaac_catchstep and (ball_obs_state["catchstep"] > ball_obs_state["control_startstep"])
+                if debug_zero_action or debug_policy_no_apply or catchstep_override_active:
+                    target_dof_pos = init_dof_pos.copy()
+                else:
+                    target_dof_pos = policy_target_dof_pos
+                last_action = raw_action.copy()
+                ball_visible = bool(np.linalg.norm(ball_feature) > 1e-6)
+                if ball_visible:
+                    policy_action_max_after_trigger = max(policy_action_max_after_trigger, float(np.max(np.abs(raw_action))))
+
+                for d in range(decimation):
+                    rs = get_robot_state(model, data, index_map, cfg)
+                    tau = pd_control(target_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
+                    for i, act_id in enumerate(index_map["actuator_ids"]):
+                        data.ctrl[act_id] = tau[i]
+                    mujoco.mj_step(model, data)
+                    physics_step_global += 1
+                    if viewer is not None:
+                        viewer.sync()
+                    root_positions.append(data.xpos[index_map["imu_body_id"]].copy())
+                    qacc = np.abs(data.qacc)
+                    if debug_qacc_log:
+                        qacc_max = float(np.max(qacc))
+                        rec = make_qacc_debug_record(
+                            model, data, index_map, cfg, control_step, physics_step_global,
+                            raw_action, target_dof_pos, rs, tau, ball_feature, ball_visible,
+                            catchstep_override_active,
+                        )
+                        qacc_debug_records.append(rec)
+                        if qacc_trigger_index is None and qacc_max > debug_qacc_threshold:
+                            qacc_trigger_index = len(qacc_debug_records) - 1
+                            qacc_post_trigger_remaining = 10
+                        elif qacc_post_trigger_remaining > 0:
+                            qacc_post_trigger_remaining -= 1
+                    if np.any(qacc > cfg.get("max_abs_qacc", 50000.0)):
+                        stop_reason = f"qacc_violation(max={qacc.max():.0f})"
+                        if not debug_qacc_log or qacc_post_trigger_remaining <= 0:
+                            break
+
+                advance_ball_obs_state(ball_obs_state)
+
+                if renderer is not None:
+                    renderer.update_scene(data)
+                    frames.append(renderer.render())
+
+                if stop_reason != "timeout":
+                    break
+
+                if gk_local_step * policy_dt > 2.0:
+                    stop_reason = "gk_active_timeout"
+                    break
+
+                if control_step % 20 == 0 or gk_local_step <= 2:
+                    t = control_step * policy_dt
+                    rs = get_robot_state(model, data, index_map, cfg)
+                    bf_obs = single_obs[0:3]
+                    grav = rs["projected_gravity"]
+                    tau_abs = np.abs(tau)
+                    roll = np.arctan2(grav[1], -grav[2]) if abs(grav[2]) > 0.1 else 0.0
+                    pitch = np.arctan2(-grav[0], -grav[2]) if abs(grav[2]) > 0.1 else 0.0
+                    print(f"  t={t:.2f}s [ACTIVE L+{gk_local_step}] | z={rs['base_pos'][2]:.3f} | "
+                          f"roll={np.rad2deg(roll):.1f}° pitch={np.rad2deg(pitch):.1f}° | "
+                          f"bf=[{bf_obs[0]:.3f},{bf_obs[1]:.3f},{bf_obs[2]:.3f}] | "
+                          f"act_max={np.max(np.abs(raw_action)):.2f} tau_max={tau_abs.max():.1f}")
+
+                root_z = data.xpos[index_map["imu_body_id"]][2]
+                if root_z < 0.2 or root_z > 3.0:
+                    stop_reason = f"root_height_violation(z={root_z:.3f})"
+                    break
+
+                continue
+
+            # ============================================
+            # STATE: RECOVER — PD hold
+            # ============================================
+            if state == STATE_RECOVER:
+                for d in range(decimation):
+                    rs = get_robot_state(model, data, index_map, cfg)
+                    tau = pd_control(init_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
+                    for i, act_id in enumerate(index_map["actuator_ids"]):
+                        data.ctrl[act_id] = tau[i]
+                    mujoco.mj_step(model, data)
+                    physics_step_global += 1
+                    if viewer is not None:
+                        viewer.sync()
+                    root_positions.append(data.xpos[index_map["imu_body_id"]].copy())
+                if renderer is not None:
+                    renderer.update_scene(data)
+                    frames.append(renderer.render())
+                root_z = data.xpos[index_map["imu_body_id"]][2]
+                if root_z < 0.2 or root_z > 3.0:
+                    stop_reason = f"root_height_violation(z={root_z:.3f})"
+                    break
 
     except KeyboardInterrupt:
         stop_reason = "user_interrupt"
@@ -928,6 +1069,11 @@ def run_mujoco(cfg, args):
     print(f"  Control steps: {control_step + 1}")
     print(f"  Elapsed: {elapsed:.1f}s")
     print(f"  Stop reason: {stop_reason}")
+    print(f"  Activation: {activation_mode}, visible: {gk_visible_mode}")
+    if trigger_control_step >= 0:
+        print(f"  Trigger at: step={trigger_control_step}, t={trigger_control_step * policy_dt:.2f}s")
+    print(f"  First nonzero ball_feature (local step): {first_nonzero_ball_feature_local_step}")
+    print(f"  Policy action max after trigger: {policy_action_max_after_trigger:.4f}")
     if len(root_positions) > 0:
         print(f"  Root z: min={root_positions[:, 2].min():.3f}, max={root_positions[:, 2].max():.3f}")
         print(f"  Root y: min={root_positions[:, 1].min():.3f}, max={root_positions[:, 1].max():.3f}")
@@ -1053,6 +1199,25 @@ def parse_args():
     parser.add_argument("--sanity-zero-action", action="store_true", help="Run zero-action stability test")
     parser.add_argument("--sanity-policy-dummy", action="store_true", help="Run dummy ONNX inference only")
     parser.add_argument("--no-ball-launch", action="store_true", help="Keep ball stationary at init position")
+    parser.add_argument("--ball-launch-delay", type=float, default=0.0,
+                        help="Freeze ball at spawn for N seconds (physics-only, independent of GK wrapper).")
+    parser.add_argument("--ball-spawn-distance", type=float, default=None,
+                        help="Override ball spawn x distance (m). Default: [3,5].")
+    parser.add_argument("--activation-mode", type=str, default="ball_state_trigger",
+                        choices=["ball_state_trigger", "always_on"],
+                        help="GK activation mode: ball_state_trigger (default) detects launch from ball state; "
+                             "always_on runs policy from t=0 (OOD baseline).")
+    parser.add_argument("--gk-visible-after-trigger", type=str, default="train_timing",
+                        choices=["train_timing", "immediate"],
+                        help="Ball visibility after trigger: train_timing keeps vanish; immediate shows ball right away.")
+    parser.add_argument("--trigger-speed-threshold", type=float, default=0.3,
+                        help="[ball_state_trigger] Min ball speed (m/s) for launch detection.")
+    parser.add_argument("--trigger-toward-speed-threshold", type=float, default=0.2,
+                        help="[ball_state_trigger] Min velocity toward goal (m/s).")
+    parser.add_argument("--trigger-displacement-threshold", type=float, default=0.02,
+                        help="[ball_state_trigger] Min ball displacement from init (m).")
+    parser.add_argument("--trigger-debounce-steps", type=int, default=2,
+                        help="[ball_state_trigger] Consecutive steps trigger condition must hold.")
     parser.add_argument("--ablation", type=str, default=None,
                         choices=["A_no_ball", "B_ball", "C_zero_action", "D_fixed_ball"],
                         help="Ablation mode")

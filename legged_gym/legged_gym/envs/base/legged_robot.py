@@ -296,16 +296,30 @@ class LeggedRobot(BaseTask):
 
 
         knee_threshold = float(getattr(self.cfg, 'termination', type('T',(),{'knee_height_threshold':0.10})).knee_height_threshold)
-        self.reset_buf = torch.min(self.rigid_body_states[:, self.knee_indices, 2], dim=-1).values < knee_threshold
+        knee_reset = torch.min(self.rigid_body_states[:, self.knee_indices, 2], dim=-1).values < knee_threshold
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
         gravity_term_cfg = getattr(self.cfg, 'termination', None)
         grav_threshold = float(getattr(gravity_term_cfg, 'gravity_threshold', 0.8)) if gravity_term_cfg is not None else 0.8
         self.gravity_termination_buf = torch.any(torch.norm(self.projected_gravity[:, 0:2], dim=-1, keepdim=True) > grav_threshold, dim=1)
         sharpforce_buf = torch.mean(torch.norm(self.contact_forces[:, self.contact_feet_indices, :], dim=-1), dim = -1) > 1.5 * self.cfg.rewards.max_contact_force
+        self.reset_buf = knee_reset.clone()
 
+        enable_dive_window = bool(getattr(gravity_term_cfg, 'enable_dive_window', False)) if gravity_term_cfg is not None else False
+        if enable_dive_window:
+            buffer_time = float(getattr(gravity_term_cfg, 'dive_window_buffer_time', 0.2))
+            buffer_steps = int(np.ceil(buffer_time / self.dt))
+            ball_passed_goal = self.ball_states[:, 0] < (self.env_origins[:, 0] - 0.1)
+            within_buffer = self.catchstep > (-buffer_steps)
+            in_dive_window = (self.catchstep <= self.startstep) & (~ball_passed_goal | within_buffer)
+            self.reset_buf[in_dive_window] = False
+            self.gravity_termination_buf[in_dive_window] = False
+            sharpforce_buf[in_dive_window] = False
+
+        invalid_state = ~torch.isfinite(self.root_states).all(dim=1) | ~torch.isfinite(self.ball_states).all(dim=1)
         self.reset_buf |= self.time_out_buf
         self.reset_buf |= self.gravity_termination_buf
         self.reset_buf |= sharpforce_buf
+        self.reset_buf |= invalid_state
 
 
 
@@ -912,8 +926,14 @@ class LeggedRobot(BaseTask):
 
         self.catchstep[ball_ids] = 50 * torch.ones(len(ball_ids), dtype = torch.int, device = self.device)
                 
+        # Support fixed ball start distance (extreme dive: 7m penalty spot)
+        ball_start_dist = getattr(self.cfg.env, 'ball_start_distance', None)
+        if ball_start_dist is not None:
+            start_x = torch.full((len(ball_ids),), float(ball_start_dist), dtype=dtype, device=device)
+        else:
+            start_x = 2.0 * torch.rand(len(ball_ids), dtype=dtype, device=device) + 3.0
         ball_start_local = torch.stack([
-            2.0 * torch.rand(len(ball_ids), dtype=dtype, device=device) + 3.0,
+            start_x,
             torch.rand(len(ball_ids), dtype=dtype, device=device) * (self.init_ranges[1] - self.init_ranges[0]) + self.init_ranges[0],
             torch.rand(len(ball_ids), dtype=dtype, device=device) * (self.init_ranges[3] - self.init_ranges[2]) + self.init_ranges[2]
         ], dim=1)
@@ -1386,6 +1406,11 @@ class LeggedRobot(BaseTask):
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
         self.num_bodies = len(body_names)
         self.num_dof = len(self.dof_names)
+        self._body_name_to_idx = {n: i for i, n in enumerate(body_names)}
+        self._all_body_names = list(body_names)
+        self._dive_blocker_body_indices = None
+        self._dive_blocker_body_names = None
+        self._dive_blocker_body_diag_printed = False
         # Stage 1/2/3: hip_pitch and ankle_pitch joint indices for targeted DR
         self._hp_indices = [i for i, n in enumerate(self.dof_names) if 'hip_pitch' in n]
         self._ap_indices = [i for i, n in enumerate(self.dof_names) if 'ankle_pitch' in n]
@@ -1921,3 +1946,83 @@ class LeggedRobot(BaseTask):
         deadzone = getattr(self.cfg.rewards, 'upright_deadzone', 0.15)
         danger = torch.clamp((thresh - upright) / deadzone, 0.0, 1.0)
         return (danger * danger) * mask
+
+    # ═══════════════════════════════════════════════════════════════
+    # Extreme Dive Rewards (benchmark only: gk_extreme_dive task)
+    # ═══════════════════════════════════════════════════════════════
+
+    def _reward_reach_ball(self):
+        """Reward min distance from blocker bodies to ball (closer = better)."""
+        threshold = getattr(self.cfg.rewards, 'contact_proxy_threshold', 0.12)
+        min_d = self._get_min_blocker_ball_dist()
+        return torch.exp(-min_d / threshold)
+
+    def _reward_lateral_launch(self):
+        """Reward lateral velocity toward target side."""
+        target_side = self._get_target_side_sign()  # +1 for right, -1 for left
+        base_vy = self.base_lin_vel[:, 1]
+        return torch.relu(target_side * base_vy)
+
+    def _reward_lateral_displacement(self):
+        """Reward base lateral displacement toward target side."""
+        target_side = self._get_target_side_sign()
+        base_dy = self.root_states[:, 1] - self.env_origins[:, 1]
+        return torch.relu(target_side * base_dy)
+
+    def _reward_hand_target(self):
+        """Reward hand/forearm proximity to ball target position (mid/high shots)."""
+        target_pos = self._get_ball_target_pos_world()
+        hand_pos = self._get_hand_pos()  # (N, 2, 3) — left/right
+        dist_l = torch.norm(hand_pos[:, 0, :] - target_pos, dim=-1)
+        dist_r = torch.norm(hand_pos[:, 1, :] - target_pos, dim=-1)
+        min_dist = torch.min(dist_l, dist_r)
+        # Gate by target end_z (where ball lands at goal line), not current ball height.
+        # Stage-1a: target heights 0.5-1.1m, so this is always active during dive training.
+        target_z = self.end_target[:, 2]
+        mid_high_mask = (target_z > 0.3).float()
+        return torch.exp(-min_dist / 0.5) * mid_high_mask
+
+    def _reward_contact_proxy(self):
+        """Bonus when min ball-body distance < threshold."""
+        threshold = getattr(self.cfg.rewards, 'contact_proxy_threshold', 0.12)
+        min_d = self._get_min_blocker_ball_dist()
+        return (min_d < threshold).float()
+
+    # ── Dive reward helpers ──
+
+    def _get_target_side_sign(self):
+        """Return +1 for right-side shots, -1 for left-side, based on ball end region."""
+        # end_regions: 0,2,4 = right; 1,3,5 = left
+        region = self.end_regions.long()
+        is_right = ((region == 0) | (region == 2) | (region == 4)).float()
+        is_left = ((region == 1) | (region == 3) | (region == 5)).float()
+        return is_right - is_left  # +1 right, -1 left, 0 unknown
+
+    def _get_min_blocker_ball_dist(self):
+        """Return min Euclidean distance from dive blocker bodies to ball."""
+        blocker_names = getattr(self.cfg.rewards, 'dive_blocker_bodies',
+                                 ["left_hand_link", "right_hand_link",
+                                  "left_forearm_link", "right_forearm_link"])
+        if self._dive_blocker_body_indices is None or self._dive_blocker_body_names is None:
+            matched_names = [name for name in blocker_names if name in self._body_name_to_idx]
+            missing_names = [name for name in blocker_names if name not in self._body_name_to_idx]
+            self._dive_blocker_body_names = matched_names
+            self._dive_blocker_body_indices = [self._body_name_to_idx[name] for name in matched_names]
+            if missing_names and not self._dive_blocker_body_diag_printed:
+                print('[DIVE_BLOCKERS] requested=', blocker_names)
+                print('[DIVE_BLOCKERS] matched=', matched_names)
+                print('[DIVE_BLOCKERS] missing=', missing_names)
+                print('[DIVE_BLOCKERS] all_body_names=', self._all_body_names)
+                self._dive_blocker_body_diag_printed = True
+
+        if len(self._dive_blocker_body_indices) == 0:
+            return torch.full((self.num_envs,), 999.0, device=self.device)
+
+        ball_pos = self.ball_states[:, :3].unsqueeze(1)
+        body_pos = self.rigid_body_states[:, self._dive_blocker_body_indices, :3]
+        dists = torch.norm(body_pos - ball_pos, dim=-1)
+        return torch.min(dists, dim=1).values
+
+    def _get_ball_target_pos_world(self):
+        """Return ball target (end_target) position in world frame."""
+        return self.end_target.clone()

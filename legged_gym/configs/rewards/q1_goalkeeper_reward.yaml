@@ -1,0 +1,55 @@
+# Q1 Goalkeeper default reward config
+# Override via: --reward_yaml=../configs/rewards/q1_goalkeeper_reward.yaml
+rewards:
+  reward_scales:
+    eereach: 15.0
+    success: 8.0
+    stopball: 120.0
+    stayonline: -2.0
+    noretreat: -2.0
+    successland: 10.0
+    feetorientaion: 3.0
+    penalize_sharpcontact: -100.0
+    penalize_kneeheight: -100.0
+    feet_slippage: 3.0
+    postorientation: 3.0
+    postangvel: 3.0
+    postupperdofpos: 1.0
+    postwaistdofpos: 1.0
+    postlinvel: 1.0
+    ang_vel_xy: -0.1
+    dof_acc: -0.00000025
+    smoothness: -0.1
+    torques: -0.00001
+    dof_vel: -0.0005
+    dof_pos_limits: -3.0
+    dof_vel_limits: -2.0
+    torque_limits: -2.0
+    penalty_feet_separation: 0.0
+    upright_penalty: -0.0
+    highball_jump_height: 0.0
+    highball_upward_velocity: 0.0
+    highball_upright_penalty: -0.0
+
+  only_positive_rewards: false
+  successland_jump_threshold: 0.48
+  highball_jump_z_threshold: 0.45
+  highball_jump_z_range: 0.15
+  catch_th: 0.5
+  handheight_th: 1.0
+  reach_th: 0.2
+  strict_th: 0.15
+  target_dof_pos_sigma: -20
+  tracking_sigma: 0.25
+  catch_sigma: 5.0
+  soft_dof_pos_limit: 0.9
+  soft_dof_vel_limit: 0.9
+  soft_torque_limit: 0.95
+  upright_threshold: 0.95
+  upright_deadzone: 0.15
+  upright_ball_visible_only: true
+  feet_sep_enabled: false
+  min_foot_sep: 0.12
+  feet_cross_threshold: 0.06
+  feet_too_close_threshold: 0.10
+  max_contact_force: 500.0

@@ -39,7 +39,25 @@ import torch
 
 def train(args, headless=True):
     args.headless = headless
-    env, env_cfg = task_registry.make_env(name=args.task, args=args)
+    env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
+
+    from legged_gym.utils.helpers import apply_reward_yaml
+    if args.reward_yaml is not None:
+        reward_path = args.reward_yaml
+    elif args.task in ("q1_extreme_dive", "g1_extreme_dive", "g1_dive_reach"):
+        reward_path = None  # these tasks have their own reward config
+    else:
+        # Auto-resolve default reward YAML from task name
+        if args.task.startswith("q1"):
+            reward_path = "configs/rewards/q1_goalkeeper_reward.yaml"
+        elif args.task == "29":
+            reward_path = "configs/rewards/g1_goalkeeper_official.yaml"
+        else:
+            reward_path = None
+    if reward_path is not None:
+        env_cfg = apply_reward_yaml(env_cfg, reward_path)
+
+    env, env_cfg = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     save_path = os.path.join(LEGGED_GYM_ROOT_DIR)
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args,log_root = save_path)

@@ -13,7 +13,7 @@
 | 观测维度 (num_obs) | **750** = 10 frame_stack × 75 single_obs |
 | 动作维度 (num_actions) | **22** |
 | 策略频率 | **50 Hz** (policy_dt = 0.02s) |
-| 仿真频率 | **500 Hz** (sim_dt = 0.002s, decimation = 10) |
+| 仿真频率 | **200 Hz** (sim_dt = 0.005s, decimation = 4，与 IsaacGym 训练对齐) |
 | clip_observations | ±100.0 |
 | clip_actions | ±100.0 |
 
@@ -145,8 +145,8 @@ Q1 XML 使用 per-joint 直接赋值（非 class default），所有关节 **dam
 
 | 参数 | 值 |
 |------|-----|
-| simulation_dt | 0.002s (500 Hz) |
-| control_decimation | 10 |
+| simulation_dt | 0.005s (200 Hz，与 IsaacGym 训练对齐) |
+| control_decimation | 4 |
 | policy_dt | 0.02s (50 Hz) |
 | solver | Newton (mjSOL_NEWTON) |
 | solver_iterations | 100 |

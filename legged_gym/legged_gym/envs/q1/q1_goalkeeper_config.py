@@ -158,8 +158,8 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         kp_range = [0.85, 1.15]; kd_range = [0.85, 1.15]
         randomize_initial_joint_pos = False
         continue_keep = False  # needed by leg ddl robot reset
-        push_robots = True; push_interval_s = 4.0; max_push_vel_xy = 0.25
-        ball_interval_s = 0.5; max_ball_vel = 0.5
+        push_robots = False; push_interval_s = 4.0; max_push_vel_xy = 0.25
+        ball_interval_s = 999.0; max_ball_vel = 0.0  # disabled: ball obs noise is sufficient DR
         randomize_reset_velocity = False  # Q1 goalkeeper: zero reset velocity
         randomize_motor_strength = True
         motor_strength_range = [0.85, 1.15]
@@ -167,12 +167,12 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class rewards(LeggedRobotCfg.rewards):
         class scales:
-            eereach = 30.0; success = 20.0; stopball = 300.0
-            stayonline = -1.0; noretreat = -1.0
-            successland = 5.0; feetorientaion = 1.0
+            eereach = 10.0; success = 5.0; stopball = 120.0
+            stayonline = -2.0; noretreat = -2.0
+            successland = 5.0; feetorientaion = 3.0
             penalize_sharpcontact = -100.; penalize_kneeheight = -100.; feet_slippage = 3.0
             postorientation = 3.0; postangvel = 3.0; postupperdofpos = 1.0; postwaistdofpos = 1.0; postlinvel = 1.0
-            ang_vel_xy = -0.3; dof_acc = -2.5e-7; smoothness = -0.15
+            ang_vel_xy = -0.1; dof_acc = -2.5e-7; smoothness = -0.1
             torques = -1e-5; dof_vel = -5e-4
             dof_pos_limits = -3.0; dof_vel_limits = -2.0; torque_limits = -2.0
             penalty_feet_separation = 0.0  # disabled: must match feet_sep_enabled=False
@@ -204,7 +204,7 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         frame_rate = 30; min_time = 0.1
 
     class amp:
-        obs_type = 'dof'; num_obs = 22 * 2; amp_coef = 0.0; num_steps = 2
+        obs_type = 'dof'; num_obs = 22 * 2; amp_coef = 0.4; num_steps = 2
 
 
 class Q1GoalkeeperCfgHard(Q1GoalkeeperCfg):
@@ -214,8 +214,8 @@ class Q1GoalkeeperCfgHard(Q1GoalkeeperCfg):
         friction_range = [0.3, 2.0]
         randomize_payload_mass = True
         payload_mass_range = [-1.5, 3.0]
-        push_robots = True; push_interval_s = 3.0; max_push_vel_xy = 0.5
-        ball_interval_s = 0.3; max_ball_vel = 1.0
+        push_robots = False; push_interval_s = 3.0; max_push_vel_xy = 0.5
+        ball_interval_s = 999.0; max_ball_vel = 0.0  # disabled
         randomize_kp = True; randomize_kd = True
         kp_range = [0.6, 1.5]; kd_range = [0.6, 1.5]
         randomize_motor_strength = True
@@ -243,8 +243,8 @@ class Q1GoalkeeperCfgMediumDR(Q1GoalkeeperCfgHard):
         randomize_armature_scale = True
         armature_scale = [0.5, 2.0]
         # Contact DR
-        push_during_ball = True
-        push_during_ball_vel = 0.15
+        push_during_ball = False
+        push_during_ball_vel = 0.0  # disabled: ball obs noise is sufficient DR
         randomize_restitution = True
         restitution_range = [0.0, 0.05]
         # Ball obs DR
@@ -268,8 +268,8 @@ class Q1GoalkeeperCfgContactDR(Q1GoalkeeperCfgMediumDR):
         ground_slope_deg = 3.0         # ±3° ground tilt
         randomize_ground_height = True
         ground_height_noise = 0.01     # ±0.01m
-        push_at_contact_loss = True
-        push_at_contact_loss_vel = 0.05
+        push_at_contact_loss = False
+        push_at_contact_loss_vel = 0.0  # disabled
         randomize_ball_obs_delay = True
         ball_obs_delay_steps = 2       # 0-2 steps delay
         ball_vanish_jitter = True
