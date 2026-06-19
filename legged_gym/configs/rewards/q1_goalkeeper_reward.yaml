@@ -2,12 +2,12 @@
 # Override via: --reward_yaml=../configs/rewards/q1_goalkeeper_reward.yaml
 rewards:
   reward_scales:
-    eereach: 15.0
+    eereach: 25.0
     success: 8.0
     stopball: 120.0
     stayonline: -2.0
     noretreat: -2.0
-    successland: 10.0
+    successland: 15.0
     feetorientaion: 3.0
     penalize_sharpcontact: -100.0
     penalize_kneeheight: -100.0
@@ -32,7 +32,7 @@ rewards:
     highball_upright_penalty: -0.0
 
   only_positive_rewards: false
-  successland_jump_threshold: 0.48
+  successland_jump_threshold: 0.53
   highball_jump_z_threshold: 0.45
   highball_jump_z_range: 0.15
   catch_th: 0.5

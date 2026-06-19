@@ -772,39 +772,6 @@ class DiveReachRobot(LeggedRobot):
             raise RuntimeError("Non-finite privileged_obs_buf in g1_dive_reach")
 
     # ═══════════════════════════════════════════════════════
-    # Reward accounting debug
-    # ═══════════════════════════════════════════════════════
-
-    def compute_reward(self):
-        """Override: call parent, then compare visible sum vs actual rew_buf."""
-        # Call parent's compute_reward
-        super().compute_reward()
-
-        # DEBUG: compare sum of logged reward terms vs actual rew_buf
-        visible_sum = torch.zeros(self.num_envs, device=self.device)
-        for name in self.reward_names:
-            scale = self.reward_scales[name]
-            fn = getattr(self, '_reward_' + name)
-            visible_sum += fn() * scale
-
-        diff = self.rew_buf - visible_sum
-        abs_diff = diff.abs()
-        if abs_diff.max() > 0.01:
-            print(f"[REWARD_ACCT] WARN: max|rew_buf - visible_sum| = {abs_diff.max().item():.4f}")
-            print(f"[REWARD_ACCT]       mean diff = {diff.mean().item():.4f}")
-            print(f"[REWARD_ACCT]       reward_names = {self.reward_names}")
-            # Check termination
-            if "termination" in self.reward_scales:
-                t = self._reward_termination() * self.reward_scales["termination"]
-                print(f"[REWARD_ACCT]       termination_rew = mean {t.mean().item():.4f}")
-            # Check if there's an extra term we're missing
-            extra = self.rew_buf - visible_sum
-            if "termination" in self.reward_scales:
-                extra = extra - self._reward_termination() * self.reward_scales["termination"]
-            if extra.abs().max() > 0.01:
-                print(f"[REWARD_ACCT]       UNEXPLAINED extra: mean={extra.mean().item():.4f}, max={extra.max().item():.4f}")
-
-    # ═══════════════════════════════════════════════════════
     # Rewards
     # ═══════════════════════════════════════════════════════
 

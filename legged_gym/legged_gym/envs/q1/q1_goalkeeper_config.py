@@ -181,7 +181,7 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
             highball_upward_velocity = 0.0   # reward root_vz > 0 on high-ball modes
             highball_upright_penalty = -3.0  # extra upright penalty on high-ball modes only
         only_positive_rewards = False
-        successland_jump_threshold = 0.48    # root_z above this triggers 'has_in_air' (G1 default=0.55)
+        successland_jump_threshold = 0.53    # root_z above this triggers 'has_in_air' (G1 default=0.55)
         highball_jump_z_threshold = 0.45     # root_z above this starts earning jump reward
         highball_jump_z_range = 0.15         # maps threshold→threshold+range to reward 0→1
         catch_th = 0.5; handheight_th = 1.0; reach_th = 0.2; strict_th = 0.15

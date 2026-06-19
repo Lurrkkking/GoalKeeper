@@ -39,6 +39,7 @@ from .q1.q1_goalkeeper_config import (
 )
 from .q1.q1_extreme_dive_config import Q1ExtremeDiveCfg, Q1ExtremeDiveCfgPPO
 from .g1.g1_dive_reach_config import G1DiveReachCfg, G1DiveReachCfgPPO, DiveReachRobot
+from .g1.g1_dive_save_config import G1DiveSaveCfg, G1DiveSaveCfgPPO, DiveSaveRobot
 
 import os
 
@@ -54,3 +55,4 @@ task_registry.register( "q1_stage1", LeggedRobot, Q1GoalkeeperCfgStage1(), Q1Goa
 task_registry.register( "q1_extreme_dive", LeggedRobot, Q1ExtremeDiveCfg(), Q1ExtremeDiveCfgPPO() )
 task_registry.register( "g1_extreme_dive", LeggedRobot, G1ExtremeDiveCfg(), G1ExtremeDiveCfgPPO() )
 task_registry.register( "g1_dive_reach", DiveReachRobot, G1DiveReachCfg(), G1DiveReachCfgPPO() )
+task_registry.register( "g1_dive_save", DiveSaveRobot, G1DiveSaveCfg(), G1DiveSaveCfgPPO() )

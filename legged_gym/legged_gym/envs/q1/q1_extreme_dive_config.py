@@ -202,7 +202,7 @@ class Q1ExtremeDiveCfg(LeggedRobotCfg):
             contact_proxy = 5.0                 # bonus when min_ball_body_dist < 0.12
 
         only_positive_rewards = False
-        successland_jump_threshold = 0.48
+        successland_jump_threshold = 0.53
         highball_jump_z_threshold = 0.45
         highball_jump_z_range = 0.15
         catch_th = 0.5; handheight_th = 1.0; reach_th = 0.2; strict_th = 0.15

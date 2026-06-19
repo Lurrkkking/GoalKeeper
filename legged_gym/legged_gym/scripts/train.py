@@ -44,7 +44,7 @@ def train(args, headless=True):
     from legged_gym.utils.helpers import apply_reward_yaml
     if args.reward_yaml is not None:
         reward_path = args.reward_yaml
-    elif args.task in ("q1_extreme_dive", "g1_extreme_dive", "g1_dive_reach"):
+    elif args.task in ("q1_extreme_dive", "g1_extreme_dive", "g1_dive_reach", "g1_dive_save"):
         reward_path = None  # these tasks have their own reward config
     else:
         # Auto-resolve default reward YAML from task name
