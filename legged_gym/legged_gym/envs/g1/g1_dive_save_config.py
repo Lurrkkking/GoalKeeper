@@ -46,29 +46,29 @@ class G1DiveSaveCfg(LeggedRobotCfg):
 
     class commands:
         class ranges_0:
-            height = [0.25, 0.60]; width = [1.25, 1.45]
-            maxh = [0.25, 0.60]; maxw = [1.25, 1.45]
-            evalh = [0.25, 0.60]; evalw = [1.25, 1.45]
+            height = [1.4, 1.6]; width = [1.5, 1.7]
+            maxh = [1.4, 1.6]; maxw = [1.5, 1.7]
+            evalh = [1.4, 1.6]; evalw = [1.5, 1.7]
         class ranges_1:
-            height = [0.25, 0.60]; width = [-1.45, -1.25]
-            maxh = [0.25, 0.60]; maxw = [-1.45, -1.25]
-            evalh = [0.25, 0.60]; evalw = [-1.45, -1.25]
+            height = [1.4, 1.6]; width = [-1.7, -1.5]
+            maxh = [1.4, 1.6]; maxw = [-1.7, -1.5]
+            evalh = [1.4, 1.6]; evalw = [-1.7, -1.5]
         class ranges_2:
-            height = [0.25, 0.60]; width = [1.25, 1.45]
-            maxh = [0.25, 0.60]; maxw = [1.25, 1.45]
-            evalh = [0.25, 0.60]; evalw = [1.25, 1.45]
+            height = [1.4, 1.6]; width = [1.5, 1.7]
+            maxh = [1.4, 1.6]; maxw = [1.5, 1.7]
+            evalh = [1.4, 1.6]; evalw = [1.5, 1.7]
         class ranges_3:
-            height = [0.25, 0.60]; width = [-1.45, -1.25]
-            maxh = [0.25, 0.60]; maxw = [-1.45, -1.25]
-            evalh = [0.25, 0.60]; evalw = [-1.45, -1.25]
+            height = [1.4, 1.6]; width = [-1.7, -1.5]
+            maxh = [1.4, 1.6]; maxw = [-1.7, -1.5]
+            evalh = [1.4, 1.6]; evalw = [-1.7, -1.5]
         class ranges_4:
-            height = [0.25, 0.60]; width = [1.25, 1.45]
-            maxh = [0.25, 0.60]; maxw = [1.25, 1.45]
-            evalh = [0.25, 0.60]; evalw = [1.25, 1.45]
+            height = [1.4, 1.6]; width = [1.5, 1.7]
+            maxh = [1.4, 1.6]; maxw = [1.5, 1.7]
+            evalh = [1.4, 1.6]; evalw = [1.5, 1.7]
         class ranges_5:
-            height = [0.25, 0.60]; width = [-1.45, -1.25]
-            maxh = [0.25, 0.60]; maxw = [-1.45, -1.25]
-            evalh = [0.25, 0.60]; evalw = [-1.45, -1.25]
+            height = [1.4, 1.6]; width = [-1.7, -1.5]
+            maxh = [1.4, 1.6]; maxw = [-1.7, -1.5]
+            evalh = [1.4, 1.6]; evalw = [-1.7, -1.5]
 
     class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 0.8]
@@ -218,9 +218,10 @@ class G1DiveSaveCfg(LeggedRobotCfg):
         success_root_lateral_disp_min = 0.4
         success_root_lateral_vel_min = 0.5  # logging only
         hand_x_window = 0.5
-        hand_z_min = 0.0; hand_z_max = 0.8
+        hand_z_min = 1.2; hand_z_max = 1.8
         # Goal area (world-size): ball inside these bounds = conceded
-        goal_half_width = 1.5           # ±1.5m covers target at ±1.45
+        target_z_low = 1.4; target_z_high = 1.6
+        goal_half_width = 1.8           # ±1.8m covers target at ±1.7
         goal_height = 1.8               # covers target_z up to 1.65
         goal_x_crossing = -0.6          # ball x < this = crossed goal plane
 
@@ -284,12 +285,14 @@ class DiveSaveRobot(DiveReachRobot):
         target_y_local = torch.zeros(n, dtype=torch.float, device=self.device)
         if is_pos_y.any():
             n_pos = is_pos_y.sum().item()
-            target_y_local[is_pos_y] = torch.rand(n_pos, device=self.device) * 0.2 + 1.25  # [1.25, 1.45]
+            target_y_local[is_pos_y] = torch.rand(n_pos, device=self.device) * 0.2 + 1.5  # [1.5, 1.7]
         if is_neg_y.any():
             n_neg = is_neg_y.sum().item()
-            target_y_local[is_neg_y] = -(torch.rand(n_neg, device=self.device) * 0.2 + 1.25)  # [-1.45, -1.25]
+            target_y_local[is_neg_y] = -(torch.rand(n_neg, device=self.device) * 0.2 + 1.5)  # [-1.7, -1.5]
 
-        target_z = torch.rand(n, device=self.device) * 0.35 + 0.25  # [0.25, 0.60]
+        zl = float(self._dr_cfg.target_z_low)
+        zh = float(self._dr_cfg.target_z_high)
+        target_z = torch.rand(n, device=self.device) * (zh - zl) + zl
 
         self.local_target_y[env_ids] = target_y_local
         self.target_side[env_ids] = torch.sign(target_y_local)
@@ -341,7 +344,7 @@ class DiveSaveRobot(DiveReachRobot):
         print("[DIVE_SAVE] Oracle ball shooting to target zone")
         print(f"[DIVE_SAVE] ETA window: ±{self._dr_cfg.eta_window_half}s around arrival")
         print(f"[DIVE_SAVE] Goal: half_width={self._dr_cfg.goal_half_width}, height={self._dr_cfg.goal_height}")
-        print(f"[DIVE_SAVE] Target: y∈±[1.25,1.45], z∈[1.35,1.65] (inside goal)")
+        print(f"[DIVE_SAVE] Target: y∈±[1.5,1.7], z∈[1.4,1.6] (high corner save)")
 
     # ═══════════════════════════════════════════════════════
     # Oracle ball shooting — ball goes through target
@@ -363,7 +366,7 @@ class DiveSaveRobot(DiveReachRobot):
         # ── Ball start: random in front, narrow y, low z ──
         start_x = torch.rand(n, dtype=dtype, device=device) * 2.0 + 3.0       # [3, 5]
         start_y = torch.rand(n, dtype=dtype, device=device) * 0.8 - 0.4       # [-0.4, 0.4]
-        start_z = torch.rand(n, dtype=dtype, device=device) * 0.2 + 0.25      # [0.25, 0.45]
+        start_z = torch.rand(n, dtype=dtype, device=device) * 0.2 + 0.2       # [0.2, 0.4]
 
         ball_start_local = torch.stack([start_x, start_y, start_z], dim=1)
         self.ball_start[ball_ids, :] = ball_start_local + self.env_origins[ball_ids]
