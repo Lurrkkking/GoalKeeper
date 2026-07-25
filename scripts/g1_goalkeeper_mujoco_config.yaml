@@ -8,10 +8,17 @@
 xml_path: "g1_goalkeeper_mujoco.xml"
 policy_path: "../legged_gym/logs/g1/exported/policies/goalkeeper_official.onnx"
 
+# Optional ball-free ready-stand policy used by --activation-mode ball_state_trigger.
+standby_policy_path: null
+standby_num_single_obs: 93
+standby_frame_stack: 10
+standby_num_obs: 930
+standby_default_dof_pos: [-0.1, 0.2, 0.0, 0.45, -0.1, -0.2, -0.1, -0.2, 0.0, 0.45, -0.1, 0.2, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.2, 0.0, 0.0, 0.0, 0.0, -0.5, 0.0, 1.2, 0.0, 0.0, 0.0]
+
 # --- Simulation ---
 simulation_dt: 0.005        # 200 Hz MuJoCo physics (matches IsaacGym training sim_dt)
 control_decimation: 4       # policy runs at 50 Hz -> policy_dt = 0.005 * 4 = 0.02s (matches IsaacGym training)
-simulation_duration: 3.0    # seconds (150 control steps at 50Hz)
+simulation_duration: 8.0    # 5s wait + up to 2s GK window, with margin
 
 # --- Observation dimensions ---
 num_actions: 29

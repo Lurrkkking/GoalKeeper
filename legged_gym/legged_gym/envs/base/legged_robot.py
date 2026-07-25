@@ -1276,11 +1276,16 @@ class LeggedRobot(BaseTask):
 
 
 
-        multidataset, mapping = load_imitation_dataset(self.cfg.dataset.folder.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR),self.cfg.dataset.joint_mapping.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR))
         self.motions = {}
         self.motion_ids = {}
         self.motion_time = {}
         self.motion_dict = {}
+        # Ready-stand policies do not use AMP/motion imitation. Skipping this
+        # load keeps them independent from goalkeeper datasets without link trajectories.
+        if not getattr(self.cfg.dataset, "load_motions", True):
+            return
+
+        multidataset, mapping = load_imitation_dataset(self.cfg.dataset.folder.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR),self.cfg.dataset.joint_mapping.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR))
         for key in multidataset.keys():
             # Here 'key' will be the dataset's key name, and 'dataset' is the actual data
 

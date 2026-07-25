@@ -7,13 +7,20 @@
 # IsaacGym-aligned physical baseline:
 # ball mass=0.1 kg, radius=0.1 m, friction≈0.5
 # body friction=1.0, condim=3
-xml_path: "q1_abi_B6_g1_joint.xml"  # B6: armature=0.004, damping=0.52, frictionloss=0.65 + G1-style collision
+xml_path: "q1_goalkeeper.xml"  # B6: armature=0.004, damping=0.52, frictionloss=0.65 + G1-style collision
 policy_path: "../legged_gym/logs/q1/exported/policies/goalkeeper.onnx"
+
+# Optional ball-free ready-stand policy used by --activation-mode ball_state_trigger.
+standby_policy_path: null
+standby_num_single_obs: 72
+standby_frame_stack: 10
+standby_num_obs: 720
+standby_default_dof_pos: [-0.2, 0.0, 0.0, 0.5, -0.2, 0.0, -0.2, 0.0, 0.0, 0.5, -0.2, 0.0, 0.0, 0.0, 0.0, 0.14, 0.0, 1.3, 0.0, -0.14, 0.0, 1.3]
 
 # --- Simulation ---
 simulation_dt: 0.002       # 500 Hz MuJoCo physics (more stable than 200Hz for body-ground contact)
 control_decimation: 10      # policy runs at 50 Hz → policy_dt = 0.002 * 10 = 0.02s (matches IsaacGym training)
-simulation_duration: 3.0    # seconds (150 control steps at 50Hz)
+simulation_duration: 8.0    # 5s wait + up to 2s GK window, with margin
 
 # --- Observation dimensions ---
 num_actions: 22
@@ -55,11 +62,11 @@ joint_names: [
 
 # --- Default DOF positions (from Q1 goalkeeper config init_pos / default_joint_angles) ---
 default_dof_pos: [
-  -0.087, 0.0, 0.0, 0.175, -0.087, 0.0,   # left leg
-  -0.087, 0.0, 0.0, 0.175, -0.087, 0.0,   # right leg
-  0.0, 0.0,                                 # waist (roll, yaw)
-  0.0, 0.0, 0.0, 0.0,                       # left arm
-  0.0, 0.0, 0.0, 0.0,                       # right arm
+  -0.2, 0.0, 0.0, 0.5, -0.2, 0.0,           # left leg
+  -0.2, 0.0, 0.0, 0.5, -0.2, 0.0,           # right leg
+  0.0, 0.0,                                  # waist (roll, yaw)
+  0.0, 0.14, 0.0, 1.3,                       # left arm
+  0.0, -0.14, 0.0, 1.3,                      # right arm
 ]
 
 # --- Initial root pose (Q1: z=0.415) ---

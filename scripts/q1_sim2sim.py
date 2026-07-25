@@ -39,6 +39,15 @@ import mujoco
 import mujoco.viewer
 import onnxruntime as ort
 
+from standby_policy import (
+    build_standby_observation,
+    create_standby_history,
+    resolve_standby_policy_path,
+    standby_action_to_target,
+    standby_dimensions,
+    update_standby_history,
+)
+
 
 # ==============================================================================
 # Quaternion helpers (scipy.spatial.transform-free, for minimal deps)
@@ -91,6 +100,7 @@ def read_conf(config_path):
 
     # Resolve paths relative to config file directory
     cfg_dir = os.path.dirname(os.path.abspath(config_path))
+    cfg["_config_dir"] = cfg_dir
     for path_key in ["xml_path", "policy_path"]:
         p = cfg[path_key]
         if not os.path.isabs(p):
@@ -693,6 +703,16 @@ def run_mujoco(cfg, args):
     policy = load_onnx_policy(cfg["policy_path"])
     inspect_policy_io(policy, cfg["num_obs"], cfg["num_actions"])
 
+    standby_policy_path = resolve_standby_policy_path(cfg, getattr(args, "standby_policy", None))
+    standby_policy = None
+    if standby_policy_path is not None:
+        if "standby_default_dof_pos" not in cfg:
+            raise KeyError("standby_default_dof_pos is required when using --standby-policy")
+        _, _, standby_obs_dim = standby_dimensions(cfg)
+        standby_policy = load_onnx_policy(standby_policy_path)
+        inspect_policy_io(standby_policy, standby_obs_dim, cfg["num_actions"])
+        print(f"  [WRAPPER] standby policy: {standby_policy_path}")
+
     # Control parameters
     sim_dt = cfg["simulation_dt"]
     decimation = cfg["control_decimation"]
@@ -711,6 +731,9 @@ def run_mujoco(cfg, args):
     last_action = np.zeros(cfg["num_actions"], dtype=np.float32)
     target_dof_pos = np.array(cfg["default_dof_pos"], dtype=np.float64)
     init_dof_pos = np.array(cfg["default_dof_pos"], dtype=np.float64)
+    standby_history = create_standby_history(cfg) if standby_policy is not None else None
+    standby_last_action = np.zeros(cfg["num_actions"], dtype=np.float32)
+    standby_target_dof_pos = init_dof_pos.copy()
     debug_zero_action = bool(getattr(args, "debug_zero_action", False))
     debug_policy_no_apply = bool(getattr(args, "debug_policy_no_apply", False))
     debug_apply_isaac_catchstep = bool(getattr(args, "debug_apply_isaac_catchstep", False))
@@ -875,13 +898,27 @@ def run_mujoco(cfg, args):
                     print(f"  speed={speed:.3f} m/s, v_toward_goal={v_tg:.3f} m/s, displacement={disp:.4f} m")
                     print(f"  debounce={debounce_counter}/{debounce_steps}")
                     print(f"  visible_mode={gk_visible_mode}, catchstep={ball_obs_state['catchstep']}")
+                    if standby_policy is not None:
+                        print(f"  standby-to-GK target max delta={np.max(np.abs(standby_target_dof_pos - init_dof_pos)):.4f} rad")
                     state = STATE_ACTIVE
 
-                # WAIT physics: PD hold at default pose, no policy
+                # WAIT physics: ready-stand policy when provided, otherwise legacy PD hold.
                 if state == STATE_WAIT:
+                    wait_target_dof_pos = init_dof_pos
+                    if standby_policy is not None:
+                        wait_robot_state = get_robot_state(model, data, index_map, cfg)
+                        wait_single_obs = build_standby_observation(wait_robot_state, standby_last_action, cfg)
+                        wait_obs = update_standby_history(standby_history, wait_single_obs, cfg)
+                        wait_action = np.clip(policy_infer(standby_policy, wait_obs.reshape(1, -1))[0], -cfg["clip_actions"], cfg["clip_actions"])
+                        if not np.isfinite(wait_action).all():
+                            stop_reason = "standby_action_non_finite"
+                            break
+                        standby_last_action = wait_action.copy()
+                        standby_target_dof_pos = standby_action_to_target(wait_action, cfg)
+                        wait_target_dof_pos = standby_target_dof_pos
                     for d in range(decimation):
                         rs = get_robot_state(model, data, index_map, cfg)
-                        tau = pd_control(init_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
+                        tau = pd_control(wait_target_dof_pos, rs["dof_pos"], rs["dof_vel"], cfg)
                         for i, act_id in enumerate(index_map["actuator_ids"]):
                             data.ctrl[act_id] = tau[i]
                         mujoco.mj_step(model, data)
@@ -1197,8 +1234,10 @@ def parse_args():
     parser.add_argument("--sanity-zero-action", action="store_true", help="Run zero-action stability test")
     parser.add_argument("--sanity-policy-dummy", action="store_true", help="Run dummy ONNX inference only")
     parser.add_argument("--no-ball-launch", action="store_true", help="Keep ball stationary at init position")
-    parser.add_argument("--ball-launch-delay", type=float, default=0.0,
+    parser.add_argument("--ball-launch-delay", type=float, default=5.0,
                         help="Freeze ball at spawn for N seconds (physics-only, independent of GK wrapper).")
+    parser.add_argument("--standby-policy", type=str, default=None,
+                        help="Optional ready-stand ONNX used while waiting for a ball-state trigger.")
     parser.add_argument("--activation-mode", type=str, default="ball_state_trigger",
                         choices=["ball_state_trigger", "always_on"],
                         help="GK activation mode: ball_state_trigger (default) detects launch from ball state; "

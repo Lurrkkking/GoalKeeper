@@ -51,18 +51,22 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
 
     class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 0.415]
+        # Match the ready-stand policy so reset and zero action share one pose.
         default_joint_angles = {
-            'left_hip_pitch_joint': -0.087,  'left_hip_roll_joint': 0.0,    'left_hip_yaw_joint': 0.0,
-            'left_knee_joint': 0.175,        'left_ankle_pitch_joint': -0.087, 'left_ankle_roll_joint': 0.0,
-            'right_hip_pitch_joint': -0.087, 'right_hip_roll_joint': 0.0,    'right_hip_yaw_joint': 0.0,
-            'right_knee_joint': 0.175,       'right_ankle_pitch_joint': -0.087, 'right_ankle_roll_joint': 0.0,
-            'waist_roll_joint': 0.0,        'waist_yaw_joint': 0.0,
-            'left_shoulder_pitch_joint': 0.0,  'left_shoulder_roll_joint': 0.0,
-            'left_shoulder_yaw_joint': 0.0,    'left_elbow_joint': 0.0,
-            'right_shoulder_pitch_joint': 0.0, 'right_shoulder_roll_joint': 0.0,
-            'right_shoulder_yaw_joint': 0.0,   'right_elbow_joint': 0.0,
+            'left_hip_pitch_joint': -0.2, 'left_hip_roll_joint': 0.0, 'left_hip_yaw_joint': 0.0,
+            'left_knee_joint': 0.5, 'left_ankle_pitch_joint': -0.2, 'left_ankle_roll_joint': 0.0,
+            'right_hip_pitch_joint': -0.2, 'right_hip_roll_joint': 0.0, 'right_hip_yaw_joint': 0.0,
+            'right_knee_joint': 0.5, 'right_ankle_pitch_joint': -0.2, 'right_ankle_roll_joint': 0.0,
+            'waist_roll_joint': 0.0, 'waist_yaw_joint': 0.0,
+            'left_shoulder_pitch_joint': 0.0, 'left_shoulder_roll_joint': 0.14,
+            'left_shoulder_yaw_joint': 0.0, 'left_elbow_joint': 1.3,
+            'right_shoulder_pitch_joint': 0.0, 'right_shoulder_roll_joint': -0.14,
+            'right_shoulder_yaw_joint': 0.0, 'right_elbow_joint': 1.3,
         }
-        init_pos = [-0.087,0,0,0.175,-0.087,0,-0.087,0,0,0.175,-0.087,0,0,0,0,0,0,0,0,0,0,0]
+        init_pos = [-0.2, 0.0, 0.0, 0.5, -0.2, 0.0,
+                    -0.2, 0.0, 0.0, 0.5, -0.2, 0.0,
+                    0.0, 0.0, 0.0, 0.14, 0.0, 1.3,
+                    0.0, -0.14, 0.0, 1.3]
         # Boost anti-spin torque (applied after env init)
         torque_limits_scale = {
             'left_hip_yaw_joint': 2.0, 'right_hip_yaw_joint': 2.0,
@@ -202,6 +206,8 @@ class Q1GoalkeeperCfg(LeggedRobotCfg):
         folder = "{LEGGED_GYM_ROOT_DIR}/resources/datasets/goalkeeper"
         joint_mapping = "{LEGGED_GYM_ROOT_DIR}/resources/datasets/goalkeeper/joint_id.txt"
         frame_rate = 30; min_time = 0.1
+        # Q1 AMP files are DOF-only; MotionLib now accepts this format.
+        load_motions = True
 
     class amp:
         obs_type = 'dof'; num_obs = 22 * 2; amp_coef = 0.4; num_steps = 2

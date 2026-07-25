@@ -2,7 +2,7 @@
 
 > 用于与其他仿真/真机对齐参数。
 > 策略权重: `goalkeeper.onnx` (Q1 goalkeeper checkpoint)
-> XML: `q1_abi_B6_g1_joint.xml`
+> XML: `q1_goalkeeper.xml`
 
 ---
 
@@ -72,7 +72,7 @@
 
 ## 3. MuJoCo XML 关节物理参数
 
-所有数值来自 `q1_abi_B6_g1_joint.xml`。
+所有数值来自 `q1_goalkeeper.xml`。
 
 Q1 XML 使用 per-joint 直接赋值（非 class default），所有关节 **damping=0.52, armature=0.004**。
 

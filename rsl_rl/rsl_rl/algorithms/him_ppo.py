@@ -58,11 +58,13 @@ class HIMPPO:
                  amp=None,
                  amp_normalizer=None,
                  motion_buffer=None,
-                 amp_coef=0.0
+                 amp_coef=0.0,
+                 use_auxiliary_estimators=True
                  ):
 
         self.device = device
         self.amp_coef = amp_coef
+        self.use_auxiliary_estimators = use_auxiliary_estimators
 
         self.desired_kl = desired_kl
         self.schedule = schedule
@@ -187,9 +189,16 @@ class HIMPPO:
             old_mu_batch, old_sigma_batch, amp_obs_batch in generator:
 
                 _, estball_batch, estregion_batch = self.actor_critic.act(obs_batch)
-                
-                gtball_batch = critic_obs_batch[:, -13:-7]
-                gtregion_batch = (3 * critic_obs_batch[:, -14]).long()
+                if self.use_auxiliary_estimators:
+                    # Goalkeeper-only privileged labels: ball velocity and target region.
+                    gtball_batch = critic_obs_batch[:, -13:-7]
+                    gtregion_batch = (3 * critic_obs_batch[:, -14]).long()
+                    est_loss = (estball_batch - gtball_batch).pow(2).mean()
+                    region_loss = nn.CrossEntropyLoss()(estregion_batch, gtregion_batch)
+                else:
+                    # Generic tasks such as ready-stand have no ball or region labels.
+                    est_loss = obs_batch.new_zeros(())
+                    region_loss = obs_batch.new_zeros(())
 
                 actions_log_prob_batch = self.actor_critic.get_actions_log_prob(actions_batch)
                 value_batch = self.actor_critic.evaluate(critic_obs_batch)
@@ -228,10 +237,9 @@ class HIMPPO:
                 else:
                     value_loss = (returns_batch - value_batch).pow(2).mean()
                 
-                # est ball loss
-                est_loss = (estball_batch - gtball_batch).pow(2).mean()
-                region_loss = nn.CrossEntropyLoss()(estregion_batch, gtregion_batch)
-                loss = surrogate_loss + est_loss + region_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+                loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+                if self.use_auxiliary_estimators:
+                    loss = loss + est_loss + region_loss
 
                 # Smooth loss
                 epsilon = self.smoothness_lower_bound / (self.smoothness_upper_bound - self.smoothness_lower_bound)

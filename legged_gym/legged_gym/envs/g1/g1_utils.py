@@ -125,24 +125,27 @@ class MotionLib:
                     self.motion_dof_pos[start:end, j] = dof_pos[:, mapping[name]]
                     self.motion_dof_vel[start:end, j] = dof_vel[:, mapping[name]]
 
-            for k, name in enumerate(keyframe_names):
-                # import ipdb; ipdb.set_trace()
-                self.motion_keyframe_pos[start:end, k] = torch.tensor(traj["link_position"][:, k], dtype=torch.float, device=device)
-                self.motion_keyframe_rpy[start:end, k] = torch.tensor(euler_from_quaternion(traj["link_orientation"][:, k]), dtype=torch.float, device=device)
-                self.motion_keyframe_lin_vel[start:end, k] = torch.tensor(traj["link_velocity"][:, k], dtype=torch.float, device=device)
-                self.motion_keyframe_ang_vel[start:end, k] = torch.tensor(traj["link_angular_velocity"][:, k], dtype=torch.float, device=device)
-            
-            self.motion_keyframe_pos[start:end, :, 0:2] -= self.motion_base_pos[start:start+1, None, 0:2]
+            keyframe_fields = ("link_position", "link_orientation", "link_velocity", "link_angular_velocity")
+            has_keyframe_data = all(field in traj for field in keyframe_fields)
+            if has_keyframe_data:
+                for k, name in enumerate(keyframe_names):
+                    self.motion_keyframe_pos[start:end, k] = torch.tensor(traj["link_position"][:, k], dtype=torch.float, device=device)
+                    self.motion_keyframe_rpy[start:end, k] = torch.tensor(euler_from_quaternion(traj["link_orientation"][:, k]), dtype=torch.float, device=device)
+                    self.motion_keyframe_lin_vel[start:end, k] = torch.tensor(traj["link_velocity"][:, k], dtype=torch.float, device=device)
+                    self.motion_keyframe_ang_vel[start:end, k] = torch.tensor(traj["link_angular_velocity"][:, k], dtype=torch.float, device=device)
+
+                self.motion_keyframe_pos[start:end, :, 0:2] -= self.motion_base_pos[start:start+1, None, 0:2]
+                self.motion_keyframe_pos[start:end, :, 2] -= -0.2
+
+                # Note: the yaw conversion is retained for datasets that include link states.
+                local_rotation = euler_xyz_to_quat(self.motion_base_rpy[start:end])[:, None]
+                self.motion_keyframe_pos_local[start:end] = quat_apply_yaw_inverse(local_rotation.clone(), self.motion_keyframe_pos[start:end] - self.motion_base_pos[start:end][:, None])
+                self.motion_keyframe_quat_local[start:end] = quat_mul_yaw_inverse(local_rotation.clone(), euler_xyz_to_quat(self.motion_keyframe_rpy[start:end]))
+
+            # Q1 goalkeeper AMP files are DOF-only. Their expert observations
+            # use motion_dof_pos below, so link trajectories are optional.
             self.motion_base_pos[start:end, 0:2] -= self.motion_base_pos[start:start+1, 0:2].clone()
-
-            self.motion_keyframe_pos[start:end, :, 2] -= -0.2
             self.motion_base_pos[start:end, 2] -= -0.2
-
-            # !note: the yaw maybe inaccurate
-            local_rotation = euler_xyz_to_quat(self.motion_base_rpy[start:end])[:, None]
-            self.motion_keyframe_pos_local[start:end] = quat_apply_yaw_inverse(local_rotation.clone(), self.motion_keyframe_pos[start:end] - self.motion_base_pos[start:end][:, None]) 
-            # import ipdb; ipdb.set_trace()
-            self.motion_keyframe_quat_local[start:end] = quat_mul_yaw_inverse(local_rotation.clone(), euler_xyz_to_quat(self.motion_keyframe_rpy[start:end]))
 
         self.amp_obs_type = amp_obs_type
 

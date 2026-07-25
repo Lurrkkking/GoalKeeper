@@ -6,7 +6,7 @@
 
 | 组件 | 推荐 | 说明 |
 |---|---|---|
-| XML | `q1_abi_B6_g1_joint.xml` | armature=0.004, damping=0.52, G1 碰撞，默认配置 |
+| XML | `q1_goalkeeper.xml` | armature=0.004, damping=0.52, G1 碰撞，默认配置 |
 | Config | `q1_goalkeeper_mujoco_config.yaml` | dt=0.002, decimation=10 → policy_dt=0.02 = 50Hz |
 | **Checkpoint** | **contact DR** | `stand_urdf_5_014_contact_dr/model_750.pt` ✅ 双边 150 |
 | Ball | mass=0.1, radius=0.1, friction=0.5 | 对齐训练 ball.urdf |
@@ -58,7 +58,7 @@ training checkpoint (.pt)
 scripts/
 ├── q1_goalkeeper_mujoco_sim2sim.py       # 主 runner (支持 6 种 shot mode)
 ├── q1_goalkeeper_mujoco_config.yaml       # 默认配置 (dt=0.002, decimation=10)
-├── q1_abi_B6_g1_joint.xml                 # ★ 推荐: armature+damping + G1 碰撞
+├── q1_goalkeeper.xml                 # ★ 推荐: armature+damping + G1 碰撞
 ├── q1_22dof_goalkeeper_ball_F1_body_fric10.xml  # F1: 球对齐 + body fric=1.0
 ├── dump_mujoco_friction.py                # MuJoCo friction dump 工具
 └── outputs/                               # 视频输出目录
@@ -142,7 +142,7 @@ python3 -c "
 import yaml, os
 cfg = yaml.safe_load(open('scripts/q1_goalkeeper_mujoco_config.yaml'))
 cfg['policy_path'] = 'legged_gym/logs/q1/exported/policies/goalkeeper_rand_hard_600.onnx'
-cfg['xml_path'] = 'scripts/q1_abi_B6_g1_joint.xml'
+cfg['xml_path'] = 'scripts/q1_goalkeeper.xml'
 yaml.dump(cfg, open('/tmp/test.yaml','w'))
 "
 
@@ -173,7 +173,7 @@ MUJOCO_GL=egl python scripts/q1_goalkeeper_mujoco_sim2sim.py \
 
 ## B6 XML 配置详解
 
-B6 (`q1_abi_B6_g1_joint.xml`) 包含：
+B6 (`q1_goalkeeper.xml`) 包含：
 
 | 特性 | 值 | 来源 |
 |---|---|---|

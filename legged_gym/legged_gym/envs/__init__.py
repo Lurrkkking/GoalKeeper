@@ -40,6 +40,12 @@ from .q1.q1_goalkeeper_config import (
 from .q1.q1_extreme_dive_config import Q1ExtremeDiveCfg, Q1ExtremeDiveCfgPPO
 from .g1.g1_dive_reach_config import G1DiveReachCfg, G1DiveReachCfgPPO, DiveReachRobot
 from .g1.g1_dive_save_config import G1DiveSaveCfg, G1DiveSaveCfgPPO, DiveSaveRobot
+from .g1_2 import G12FootClearRobot, G12FootClearCfg, G12FootClearCfgPPO
+from .ready_stand import (
+    ReadyStandRobot,
+    Q1ReadyStandCfg, Q1ReadyStandCfgPPO,
+    G1ReadyStandCfg, G1ReadyStandCfgPPO,
+)
 
 import os
 
@@ -56,3 +62,6 @@ task_registry.register( "q1_extreme_dive", LeggedRobot, Q1ExtremeDiveCfg(), Q1Ex
 task_registry.register( "g1_extreme_dive", LeggedRobot, G1ExtremeDiveCfg(), G1ExtremeDiveCfgPPO() )
 task_registry.register( "g1_dive_reach", DiveReachRobot, G1DiveReachCfg(), G1DiveReachCfgPPO() )
 task_registry.register( "g1_dive_save", DiveSaveRobot, G1DiveSaveCfg(), G1DiveSaveCfgPPO() )
+task_registry.register( "g1_2_foot_clear", G12FootClearRobot, G12FootClearCfg(), G12FootClearCfgPPO() )
+task_registry.register( "q1_ready_stand", ReadyStandRobot, Q1ReadyStandCfg(), Q1ReadyStandCfgPPO() )
+task_registry.register( "g1_ready_stand", ReadyStandRobot, G1ReadyStandCfg(), G1ReadyStandCfgPPO() )
